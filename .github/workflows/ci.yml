@@ -40,7 +40,9 @@ jobs:
           sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
 
       - name: Install cargo-all-features
-        run: cargo install cargo-all-features
+        run: |
+          # If cargo-all-features does not exist, install it.
+          command -v cargo-check-all-features 2>&1 || cargo install cargo-all-features
 
       # TODO: Load a file and append that instead.
       - name: Append cargo-all-features config
