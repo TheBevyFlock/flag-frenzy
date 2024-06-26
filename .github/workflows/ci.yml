@@ -16,6 +16,8 @@ jobs:
     name: Check chunk ${{ matrix.chunk }}
     runs-on: ubuntu-latest
     strategy:
+      # One chunk failing should not cancel another.
+      fail-fast: false
       matrix:
         chunk: [1, 2, 3, 4, 5]
     steps:
