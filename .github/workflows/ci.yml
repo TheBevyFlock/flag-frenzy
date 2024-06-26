@@ -49,6 +49,5 @@ jobs:
           echo 'max_combination_size = 4' >> Cargo.toml
           echo 'skip_optional_dependencies = true' >> Cargo.toml
 
-      # - name: Check all features
-      #   run: |
-      #     cargo check-all-features --n-chunks 5 --chunk ${{ matrix.chunk }} --quiet
+      - name: Check all features
+        run: cargo check-all-features --n-chunks 5 --chunk ${{ matrix.chunk }} --quiet
