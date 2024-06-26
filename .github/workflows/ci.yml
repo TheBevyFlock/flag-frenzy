@@ -21,10 +21,14 @@ jobs:
       matrix:
         chunk: [1, 2, 3, 4, 5]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Checkout Bevy
         uses: actions/checkout@v4
         with:
           repository: bevyengine/bevy
+          path: bevy
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -34,6 +38,7 @@ jobs:
         with:
           # Each chunk saves to a separate cache.
           cache-group: ${{ github.job }}-${{ matrix.chunk }}
+          cargo-target-dir: bevy/target
 
       - name: Install Linux dependencies
         run: |
@@ -48,10 +53,12 @@ jobs:
 
       # TODO: Load a file and append that instead.
       - name: Append cargo-all-features config
+        working-directory: bevy
         run: |
           echo '[package.metadata.cargo-all-features]' >> Cargo.toml
           echo 'max_combination_size = 4' >> Cargo.toml
           echo 'skip_optional_dependencies = true' >> Cargo.toml
 
       - name: Check all features
+        working-directory: bevy
         run: cargo check-all-features --n-chunks 5 --chunk ${{ matrix.chunk }} --quiet
