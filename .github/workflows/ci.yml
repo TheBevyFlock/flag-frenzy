@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  # Runs every Sunday at midnight.
+  schedule:
+    - cron: 0 0 * * 0
+  # Allow running manually.
+  workflow_dispatch:
+
+env:
+  # Force colorful output, even though we're running in Github Actions.
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check chunk ${{ matrix.chunk }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chunk: [1, 2, 3, 4, 5]
+    steps:
+      - name: Checkout Bevy
+        uses: actions/checkout@v4
+        with:
+          repository: bevyengine/bevy
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache build files
+        uses: Leafwing-Studios/cargo-cache@v1
+        with:
+          # Each chunk saves to a separate cache.
+          cache-group: ${{ github.job }}-${{ matrix.chunk }}
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          # Installs Alsa, udev, and Wayland.
+          sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+
+      - name: Install cargo-all-features
+        run: cargo install cargo-all-features
+
+      # TODO: Load a file and append that instead.
+      - name: Append cargo-all-features config
+        run: |
+          echo '[package.metadata.cargo-all-features]' >> Cargo.toml
+          echo 'max_combination_size = 4' >> Cargo.toml
+          echo 'skip_optional_dependencies = true' >> Cargo.toml
+
+      # - name: Check all features
+      #   run: |
+      #     cargo check-all-features --n-chunks 5 --chunk ${{ matrix.chunk }} --quiet
