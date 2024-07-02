@@ -1,0 +1,6 @@
+[package]
+name = "flag-frenzy"
+edition = "2021"
+publish = false
+
+[dependencies]

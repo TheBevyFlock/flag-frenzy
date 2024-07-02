@@ -46,14 +46,5 @@ jobs:
           # Installs Alsa, udev, and Wayland.
           sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
 
-      - name: Install cargo-all-features
-        run: |
-          # If cargo-all-features does not exist, install it.
-          command -v cargo-check-all-features 2>&1 || cargo install cargo-all-features
-
-      - name: Append configuration
-        run: ./append-config.sh
-
       - name: Check all features
-        working-directory: bevy
-        run: cargo check-all-features --n-chunks 5 --chunk ${{ matrix.chunk }} --quiet
+        run: cargo run -- bevy
