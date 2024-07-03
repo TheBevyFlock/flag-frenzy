@@ -1,10 +1,16 @@
 mod config;
+mod cli;
 
-use std::path::Path;
-use config::load_config;
+use cli::CLI;
+use config::{load_config, Config};
 
 fn main() {
-    let config = load_config(Path::new("config")).unwrap();
+    let cli: CLI = argh::from_env();
 
-    println!("Config: {:#?}", config);
+    let _config = match cli.config {
+        Some(ref path) => load_config(path).unwrap(),
+        None => Config::default(),
+    };
+
+    println!("{:?}", cli);
 }
