@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use super::PackageConfig;
+use std::collections::HashMap;
 
 /// A map of all package configuration.
 #[derive(Default, Debug)]

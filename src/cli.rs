@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use argh::FromArgs;
+use std::path::PathBuf;
 
 /// Automatically checks combinations of feature flags for a Cargo project.
 #[derive(FromArgs, Debug)]

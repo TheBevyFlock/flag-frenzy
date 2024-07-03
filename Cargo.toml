@@ -4,11 +4,14 @@ edition = "2021"
 publish = false
 
 [dependencies]
-# Configuration deserialization.
+# CLI argument parsing.
+argh = "0.1.12"
+
+# General deserialization.
 serde = { version = "1.0.203", features = ["derive"] }
 
 # Configuration file format.
 toml = { version = "0.8.14", default-features = false, features = ["parse"] }
 
-# CLI argument parsing.
-argh = "0.1.12"
+# `cargo-metadata` output format.
+serde_json = "1.0.120"

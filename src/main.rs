@@ -1,16 +1,20 @@
-mod config;
 mod cli;
+mod config;
+mod metadata;
 
 use cli::CLI;
 use config::{load_config, Config};
+use metadata::load_metadata;
 
 fn main() {
     let cli: CLI = argh::from_env();
 
     let _config = match cli.config {
-        Some(ref path) => load_config(path).unwrap(),
+        Some(ref path) => load_config(path).expect("Failed to load config."),
         None => Config::default(),
     };
 
-    println!("{:?}", cli);
+    let metadata = load_metadata(&cli.manifest_path).expect("Failed to parse Cargo metadata.");
+
+    println!("{:?}", metadata);
 }
