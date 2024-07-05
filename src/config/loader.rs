@@ -4,11 +4,11 @@ use std::{collections::HashMap, fs, io, path::Path};
 use super::Config;
 
 /// Loads all config in a given folder.
-/// 
+///
 /// The folder must only contain TOML files following the pattern of `package_name.toml`.
-/// 
+///
 /// # Panics
-/// 
+///
 /// If `folder` is not a directory.
 pub fn load_config(folder: &Path) -> io::Result<Config> {
     assert!(folder.is_dir());

@@ -1,14 +1,14 @@
 use std::iter::FusedIterator;
 
 /// A fused [`Iterator`] that yields combinations ([`Box<[usize]>`](slice)).
-/// 
+///
 /// ```no_run
 /// // From a pool of size 3, find all length-2 combinations.
 /// for combo in Combos::new(3, 2) {
 ///     println!("{combo:?}");
 /// }
 /// ```
-/// 
+///
 /// The slice yielded by this iterator contains unique [`usize`]s in the range of `0..n`.
 /// `combo.len()` will always equal `k`.
 ///
@@ -18,7 +18,7 @@ pub struct Combos {
     /// The pool size, also known as `n`.
     pool_size: usize,
     /// Is worked on in-place to calculate the next combination.
-    /// 
+    ///
     /// The length of this slice is `k`. Any yielded combinations are cloned from this.
     output: Box<[usize]>,
     /// The index into the `output`.
@@ -33,13 +33,13 @@ pub struct Combos {
 impl Combos {
     /// Returns a new [`Combos`] with a pool of size `n` that will yield combinations with length
     /// `k`.
-    /// 
+    ///
     /// # Special casing
-    /// 
+    ///
     /// If `k` is 0, this iterator will yield one empty array `[]` before yielding [`None`].
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// If `n < k`.
     pub fn new(n: usize, k: usize) -> Self {
         assert!(

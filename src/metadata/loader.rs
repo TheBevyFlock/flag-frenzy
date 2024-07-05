@@ -10,9 +10,9 @@ use std::{
 const FORMAT_VERSION: &str = "1";
 
 /// Loads the metadata of a `Cargo.toml` at the specified `manifest_path` using `cargo-metadata`.
-/// 
+///
 /// # Panics
-/// 
+///
 /// If `manifest_path` is not a file.
 pub fn load_metadata(manifest_path: &Path) -> io::Result<Metadata> {
     assert!(manifest_path.is_file());

@@ -12,10 +12,10 @@ pub struct PackageConfig {
 #[serde(deny_unknown_fields, default)]
 pub struct PackageConfigFeatures {
     /// A list of feature sets that must be enabled.
-    /// 
+    ///
     /// A feature set can either be a single string, for which that feature will always be enabled,
     /// or an array of strings, for which combinations will be created.
-    /// 
+    ///
     /// ```toml
     /// [features]
     /// required = [
@@ -23,46 +23,46 @@ pub struct PackageConfigFeatures {
     ///     ["bar", "baz"],
     /// ]
     /// ```
-    /// 
+    ///
     /// In this scenario, two combinations of features will be created: `["foo", "bar"]` and
     /// `["foo", "baz"]`.
     pub required: Vec<RequiredFeature>,
 
     /// A list of feature sets that are incompatible with each other.
-    /// 
+    ///
     /// ```toml
     /// [features]
     /// incompatible = [
     ///     ["foo", "baz"],
     /// ]
     /// ```
-    /// 
+    ///
     /// In this scenario if, a combination will be skipped if it contains _both_ `foo` and `baz`.
-    /// 
+    ///
     /// If you need to always skip a feature, see [`skip`](Self::skip).
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// If an individual feature set contains less than 2 features.
     #[serde(deserialize_with = "deserialize_incompatible_features")]
     pub incompatible: Vec<Vec<String>>,
 
     /// A list of features that will always be skipped.
-    /// 
+    ///
     /// ```toml
     /// [features]
     /// skip = ["bar"]
     /// ```
-    /// 
+    ///
     /// In this scenario, any combination containing `bar` will be skipped.
-    /// 
+    ///
     /// To conditionally skip features based on other features, see
     /// [`incompatible`](Self::incompatible).
     pub skip: Vec<String>,
 }
 
 /// An untagged enum that represents singular or multiple required features.
-/// 
+///
 /// See [`PackageConfigFeatures::required`].
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
