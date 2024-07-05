@@ -6,10 +6,10 @@ mod metadata;
 mod runner;
 
 use cli::CLI;
+use combos::{feature_combos, ncr};
 use config::{load_config, Config};
 use intern::FeatureStorage;
 use metadata::{load_metadata, Package};
-use runner::check_with_features;
 
 fn main() {
     let cli: CLI = argh::from_env();
@@ -32,12 +32,29 @@ fn main() {
 
     for package in metadata.packages {
         let Package { name, features } = package;
+        let config = config.get(&name);
+        let storage = intern_features(features, &config.features.skip);
 
-        let skip: &[String] = config
-            .get(&name)
-            .map_or(&[], |config| config.features.skip.as_slice());
+        // The number of features or the max combo size, whichever is smaller.
+        let max_k = storage
+            .len()
+            .min(config.features.max_combo_size.unwrap_or(usize::MAX));
+        let estimated_checks: u64 = (0..=max_k)
+            .map(|k| ncr(storage.len() as u64, k as u64))
+            .sum();
 
-        let storage = intern_features(features, skip);
+        println!("Package {name} with {} features.", storage.len());
+        println!("Estimated checks: {}", estimated_checks);
+
+        for combo in feature_combos(&storage, max_k) {
+            let mut names = Vec::with_capacity(combo.len());
+
+            for &key in combo.iter() {
+                names.push(storage.get(key).unwrap());
+            }
+
+            println!("\tChecking: {:?}", names);
+        }
     }
 }
 

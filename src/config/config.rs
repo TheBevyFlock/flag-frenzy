@@ -27,7 +27,9 @@ impl Config {
             }
 
             if package.incompatible.iter().all(|set| set.is_empty()) {
-                package.incompatible.clone_from(&global.features.incompatible);
+                package
+                    .incompatible
+                    .clone_from(&global.features.incompatible);
             }
 
             if package.skip.is_empty() {
@@ -35,7 +37,9 @@ impl Config {
             }
 
             if package.max_combo_size.is_none() {
-                package.max_combo_size.clone_from(&global.features.max_combo_size);
+                package
+                    .max_combo_size
+                    .clone_from(&global.features.max_combo_size);
             }
         }
 
@@ -43,7 +47,7 @@ impl Config {
     }
 
     /// Returns the configuration for a specific package.
-    /// 
+    ///
     /// If no configuration is found under the name, it will return the global config.
     pub fn get(&self, name: &str) -> &PackageConfig {
         self.packages.get(name).unwrap_or(&self.global)
