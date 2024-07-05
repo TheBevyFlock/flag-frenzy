@@ -13,13 +13,8 @@ env:
 
 jobs:
   check:
-    name: Check chunk ${{ matrix.chunk }}
+    name: Check
     runs-on: ubuntu-latest
-    strategy:
-      # One chunk failing should not cancel another.
-      fail-fast: false
-      matrix:
-        chunk: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +32,7 @@ jobs:
         uses: Leafwing-Studios/cargo-cache@v1
         with:
           # Each chunk saves to a separate cache.
-          cache-group: ${{ github.job }}-${{ matrix.chunk }}
+          cache-group: ${{ github.job }}
           cargo-target-dir: bevy/target
 
       - name: Install Linux dependencies
@@ -47,4 +42,4 @@ jobs:
           sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
 
       - name: Check all features
-        run: cargo run -- bevy
+        run: cargo run -- --manifest-path bevy/Cargo.toml --config config
