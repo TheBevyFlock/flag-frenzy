@@ -31,6 +31,7 @@ pub fn check_with_features(
         .arg("--no-default-features")
         .args(["--features", &features])
         .arg("--quiet")
+        .args(["--message-format", "short"])
         .status()
         .unwrap()
 }
