@@ -61,11 +61,11 @@ pub struct PackageConfigFeatures {
     pub skip: Vec<String>,
 
     /// The limit on the size of combinations tested.
-    /// 
+    ///
     /// Due to its nature, adding new features makes the total amount of combinations scale
     /// quadratically. By setting the maximum combination size, it reduces the amount of
     /// combinations tested while still catching most issues.
-    /// 
+    ///
     /// ```toml
     /// [features]
     /// max_combo_size = 4
@@ -76,7 +76,7 @@ pub struct PackageConfigFeatures {
 /// An untagged enum that represents singular or multiple required features.
 ///
 /// See [`PackageConfigFeatures::required`].
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum RequiredFeature {
     One(String),
