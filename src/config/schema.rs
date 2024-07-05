@@ -1,7 +1,7 @@
 use serde::{de::Error, Deserialize, Deserializer};
 
 /// Represents the configuration for a specific package.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct PackageConfig {
     pub features: PackageConfigFeatures,

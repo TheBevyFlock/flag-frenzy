@@ -1,5 +1,5 @@
 use super::PackageConfig;
-use std::{collections::HashMap, ops::Deref};
+use std::collections::HashMap;
 
 /// An immutable map of all package configuration.
 ///
@@ -7,6 +7,7 @@ use std::{collections::HashMap, ops::Deref};
 #[derive(Default, Debug)]
 pub struct Config {
     packages: HashMap<String, PackageConfig>,
+    global: PackageConfig,
 }
 
 impl Config {
@@ -15,37 +16,36 @@ impl Config {
     /// If `global` is a key within `packages`, it will be removed and override the default values
     /// for all other packages.
     pub fn new(mut packages: HashMap<String, PackageConfig>) -> Self {
-        // If `global.toml` exists, apply its defaults to all other configs.
-        if let Some(PackageConfig { features: global }) = packages.remove("global") {
-            for PackageConfig { features: package } in packages.values_mut() {
-                // Override any defaults. This must be kept up-to-date with `PackageConfigFeatures`.
+        let global = packages.remove("global").unwrap_or_default();
 
-                if package.required.is_empty() {
-                    package.required.clone_from(&global.required);
-                }
+        // Apply global's values as defaults to all other configs.
+        for PackageConfig { features: package } in packages.values_mut() {
+            // Override any defaults. This must be kept up-to-date with `PackageConfigFeatures`.
 
-                if package.incompatible.iter().all(|set| set.is_empty()) {
-                    package.incompatible.clone_from(&global.incompatible);
-                }
+            if package.required.is_empty() {
+                package.required.clone_from(&global.features.required);
+            }
 
-                if package.skip.is_empty() {
-                    package.skip.clone_from(&global.skip);
-                }
+            if package.incompatible.iter().all(|set| set.is_empty()) {
+                package.incompatible.clone_from(&global.features.incompatible);
+            }
 
-                if package.max_combo_size.is_none() {
-                    package.max_combo_size.clone_from(&global.max_combo_size);
-                }
+            if package.skip.is_empty() {
+                package.skip.clone_from(&global.features.skip);
+            }
+
+            if package.max_combo_size.is_none() {
+                package.max_combo_size.clone_from(&global.features.max_combo_size);
             }
         }
 
-        Config { packages }
+        Config { packages, global }
     }
-}
 
-impl Deref for Config {
-    type Target = HashMap<String, PackageConfig>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.packages
+    /// Returns the configuration for a specific package.
+    /// 
+    /// If no configuration is found under the name, it will return the global config.
+    pub fn get(&self, name: &str) -> &PackageConfig {
+        self.packages.get(name).unwrap_or(&self.global)
     }
 }
