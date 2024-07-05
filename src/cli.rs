@@ -7,6 +7,7 @@ use std::{
 };
 
 /// Automatically checks combinations of feature flags for a Cargo project.
+#[allow(clippy::upper_case_acronyms)]
 #[derive(FromArgs, Debug)]
 pub struct CLI {
     /// the path to `Cargo.toml`

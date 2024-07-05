@@ -29,5 +29,5 @@ where
     D: Deserializer<'de>,
 {
     let result = <HashMap<String, Vec<String>>>::deserialize(deserializer)?;
-    return Ok(result.into_keys().collect());
+    Ok(result.into_keys().collect())
 }

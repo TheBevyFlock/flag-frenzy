@@ -106,7 +106,7 @@ impl Iterator for Combos {
 
                 self.in_inner_loop = true;
 
-                return Some(self.output.clone());
+                Some(self.output.clone())
             }
             true => {
                 self.output[self.i] -= 1;
@@ -125,7 +125,7 @@ impl Iterator for Combos {
                     self.is_done = true;
                 }
 
-                return Some(self.output.clone());
+                Some(self.output.clone())
             }
         }
     }

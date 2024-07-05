@@ -98,5 +98,5 @@ where
         }
     }
 
-    return Ok(result);
+    Ok(result)
 }
