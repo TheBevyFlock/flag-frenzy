@@ -16,10 +16,6 @@ pub struct CLI {
     )]
     pub manifest_path: PathBuf,
 
-    /// package(s) to check
-    #[argh(option, short = 'p')]
-    pub package: Vec<String>,
-
     /// the path to the config folder
     #[argh(option)]
     pub config: Option<PathBuf>,
