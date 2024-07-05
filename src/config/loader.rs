@@ -34,5 +34,5 @@ pub fn load_config(folder: &Path) -> io::Result<Config> {
         packages.insert(name, package_config);
     }
 
-    Ok(Config { packages })
+    Ok(Config::new(packages))
 }
