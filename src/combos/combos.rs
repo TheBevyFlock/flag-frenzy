@@ -21,6 +21,17 @@ impl Combos {
             "Cannot sample a group ({k}) larger than the original ({n})."
         );
 
+        // Edge case where it samples a combination size of 0.
+        if k == 0 {
+            return Self {
+                pool_size: n,
+                output: Box::new([]),
+                i: 0,
+                in_inner_loop: false,
+                is_done: false,
+            };
+        }
+
         let mut output = vec![0; k].into_boxed_slice();
         let i = k - 1;
 
@@ -49,6 +60,11 @@ impl Iterator for Combos {
         if self.pool_size == self.output.len() {
             self.is_done = true;
             return Some((0..self.pool_size).collect());
+        }
+
+        if self.output.len() == 0 {
+            self.is_done = true;
+            return Some(Box::new([]));
         }
 
         match self.in_inner_loop {
@@ -133,5 +149,12 @@ mod tests {
     fn n_less_than_k() {
         // `n` cannot be less than `k`.
         Combos::new(2, 3);
+    }
+
+    #[test]
+    fn k_is_zero() {
+        let mut combos = Combos::new(2, 0);
+
+        assert_eq!(*combos.next().unwrap(), [0; 0]);
     }
 }
