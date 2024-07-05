@@ -10,6 +10,7 @@ use combos::{feature_combos, ncr};
 use config::{load_config, Config};
 use intern::FeatureStorage;
 use metadata::{load_metadata, Package};
+use runner::check_with_features;
 
 fn main() {
     let cli: CLI = argh::from_env();
@@ -29,6 +30,8 @@ fn main() {
 
     #[cfg(debug_assertions)]
     println!("{:?}", metadata);
+
+    let mut failures = Vec::new();
 
     for package in metadata.packages {
         let Package { name, features } = package;
@@ -54,6 +57,22 @@ fn main() {
             }
 
             println!("\tChecking: {:?}", names);
+
+            let status = check_with_features(&name, &cli.manifest_path, &combo, &storage);
+
+            if !status.success() {
+                failures.push(format!(
+                    "Failed checking package {name} with features {names:?}"
+                ));
+            }
+        }
+    }
+
+    if !failures.is_empty() {
+        eprintln!("Failure report:");
+
+        for failure in failures {
+            eprintln!("\t{failure}");
         }
     }
 }
