@@ -6,7 +6,7 @@ mod metadata;
 
 use cli::CLI;
 use config::{load_config, Config};
-use intern::Features;
+use intern::FeatureStorage;
 use metadata::{load_metadata, Package};
 
 fn main() {
@@ -31,7 +31,7 @@ fn main() {
     for package in metadata.packages {
         let Package { name, features } = package;
 
-        let mut interned_features = Features::with_capacity_and_key(features.len());
+        let mut interned_features = FeatureStorage::with_capacity_and_key(features.len());
 
         let skip = match config.get(&name) {
             Some(package_config) => package_config.features.skip.as_slice(),
