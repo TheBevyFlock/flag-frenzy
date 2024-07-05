@@ -3,11 +3,13 @@ mod combos;
 mod config;
 mod intern;
 mod metadata;
+mod runner;
 
 use cli::CLI;
 use config::{load_config, Config};
 use intern::FeatureStorage;
 use metadata::{load_metadata, Package};
+use runner::check_with_features;
 
 fn main() {
     let cli: CLI = argh::from_env();
@@ -43,10 +45,10 @@ fn main() {
 fn intern_features(features: Vec<String>, skip: &[String]) -> FeatureStorage {
     let mut storage = FeatureStorage::with_capacity_and_key(features.len());
 
-        for feature in features {
-            if skip.contains(&feature) {
-                continue;
-            }
+    for feature in features {
+        if skip.contains(&feature) {
+            continue;
+        }
 
         storage.insert(feature);
     }
