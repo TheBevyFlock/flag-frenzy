@@ -31,19 +31,25 @@ fn main() {
     for package in metadata.packages {
         let Package { name, features } = package;
 
-        let mut interned_features = FeatureStorage::with_capacity_and_key(features.len());
+        let skip: &[String] = config
+            .get(&name)
+            .map_or(&[], |config| config.features.skip.as_slice());
 
-        let skip = match config.get(&name) {
-            Some(package_config) => package_config.features.skip.as_slice(),
-            None => &[],
-        };
+        let storage = intern_features(features, skip);
+    }
+}
+
+/// Interns all features within the given [`Vec<String>`], skipping any provided.
+fn intern_features(features: Vec<String>, skip: &[String]) -> FeatureStorage {
+    let mut storage = FeatureStorage::with_capacity_and_key(features.len());
 
         for feature in features {
             if skip.contains(&feature) {
                 continue;
             }
 
-            dbg!(interned_features.insert(feature));
-        }
+        storage.insert(feature);
     }
+
+    storage
 }
