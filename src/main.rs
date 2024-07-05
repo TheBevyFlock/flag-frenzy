@@ -33,7 +33,16 @@ fn main() {
 
         let mut interned_features = Features::with_capacity_and_key(features.len());
 
+        let skip = match config.get(&name) {
+            Some(package_config) => package_config.features.skip.as_slice(),
+            None => &[],
+        };
+
         for feature in features {
+            if skip.contains(&feature) {
+                continue;
+            }
+
             dbg!(interned_features.insert(feature));
         }
     }
