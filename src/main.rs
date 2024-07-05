@@ -1,11 +1,13 @@
 mod cli;
 mod combos;
 mod config;
+mod intern;
 mod metadata;
 
 use cli::CLI;
 use config::{load_config, Config};
-use metadata::load_metadata;
+use intern::Features;
+use metadata::{load_metadata, Package};
 
 fn main() {
     let cli: CLI = argh::from_env();
@@ -25,4 +27,14 @@ fn main() {
 
     #[cfg(debug_assertions)]
     println!("{:?}", metadata);
+
+    for package in metadata.packages {
+        let Package { name, features } = package;
+
+        let mut interned_features = Features::with_capacity_and_key(features.len());
+
+        for feature in features {
+            dbg!(interned_features.insert(feature));
+        }
+    }
 }

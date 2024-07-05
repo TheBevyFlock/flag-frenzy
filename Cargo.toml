@@ -15,3 +15,6 @@ toml = { version = "0.8.14", default-features = false, features = ["parse"] }
 
 # `cargo-metadata` output format.
 serde_json = "1.0.120"
+
+# Feature (string) internment.
+slotmap = "1.0.7"

@@ -2,4 +2,4 @@
 /target/
 
 # Checked out locally to check flags.
-bevy/
+/bevy/
