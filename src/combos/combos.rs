@@ -1,20 +1,46 @@
 use std::iter::FusedIterator;
 
-/// An [`Iterator`] that yields combonations of size `k` from pool of size `n`.
+/// A fused [`Iterator`] that yields combinations ([`Box<[usize]>`](slice)).
+/// 
+/// ```no_run
+/// // From a pool of size 3, find all length-2 combinations.
+/// for combo in Combos::new(3, 2) {
+///     println!("{combo:?}");
+/// }
+/// ```
+/// 
+/// The slice yielded by this iterator contains unique [`usize`]s in the range of `0..n`.
+/// `combo.len()` will always equal `k`.
 ///
-/// Note than `k` cannot be greater than `n`, or self [`Self::new()`] will panic.
-///
-/// Originally based on https://stackoverflow.com/a/65244323, but modified to be an asynchronous
-/// iterator.
+/// Thank you to <https://stackoverflow.com/a/65244323> for the original implementation. It has
+/// since been modified to be an [`Iterator`] with a few more optimizations.
 pub struct Combos {
+    /// The pool size, also known as `n`.
     pool_size: usize,
+    /// Is worked on in-place to calculate the next combination.
+    /// 
+    /// The length of this slice is `k`. Any yielded combinations are cloned from this.
     output: Box<[usize]>,
+    /// The index into the `output`.
     i: usize,
+    /// Used to track whether the iterator is within the outer or inner loop, based on the original
+    /// implementation.
     in_inner_loop: bool,
+    /// Used to track whether this iterator has finished yielding all combinations.
     is_done: bool,
 }
 
 impl Combos {
+    /// Returns a new [`Combos`] with a pool of size `n` that will yield combinations with length
+    /// `k`.
+    /// 
+    /// # Special casing
+    /// 
+    /// If `k` is 0, this iterator will yield one empty array `[]` before yielding [`None`].
+    /// 
+    /// # Panics
+    /// 
+    /// If `n < k`.
     pub fn new(n: usize, k: usize) -> Self {
         assert!(
             n >= k,

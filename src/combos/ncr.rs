@@ -1,5 +1,9 @@
-/// Calculates the number of combinations for a pool of size [`n`] and a combo size of [`r`].
-/// Thank you https://stackoverflow.com/a/65563202.
+/// Calculates the number of combinations for a pool of size `n` and a combo size of `r`.
+/// 
+/// Note that this calculation is relatively slow and has a chance to overflow with larger numbers.
+/// Prefer caching the output of this function instead of repeatedly calculating the result.
+/// 
+/// Thank you <https://stackoverflow.com/a/65563202>.
 pub fn ncr(n: u64, r: u64) -> u64 {
     if r > n {
         0
