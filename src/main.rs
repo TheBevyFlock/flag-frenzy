@@ -1,6 +1,6 @@
 mod cli;
 mod config;
-mod features;
+mod combos;
 mod metadata;
 
 use cli::CLI;

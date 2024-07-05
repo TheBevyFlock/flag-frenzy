@@ -94,7 +94,7 @@ impl FusedIterator for Combos {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::ncr;
+    use crate::combos::ncr;
 
     #[test]
     fn size() {
