@@ -59,6 +59,18 @@ pub struct PackageConfigFeatures {
     /// To conditionally skip features based on other features, see
     /// [`incompatible`](Self::incompatible).
     pub skip: Vec<String>,
+
+    /// The limit on the size of combinations tested.
+    /// 
+    /// Due to its nature, adding new features makes the total amount of combinations scale
+    /// quadratically. By setting the maximum combination size, it reduces the amount of
+    /// combinations tested while still catching most issues.
+    /// 
+    /// ```toml
+    /// [features]
+    /// max_combo_size = 4
+    /// ```
+    pub max_combo_size: Option<usize>,
 }
 
 /// An untagged enum that represents singular or multiple required features.

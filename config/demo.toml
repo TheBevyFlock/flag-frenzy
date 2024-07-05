@@ -15,3 +15,5 @@ skip = [
     # Never test `bev`.
     "bev",
 ]
+
+max_combo_size = 4
