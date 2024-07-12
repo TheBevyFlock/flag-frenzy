@@ -17,17 +17,5 @@ pub struct Package {
     /// The name of the crate.
     pub name: String,
     /// A list of all features in a crate.
-    #[serde(deserialize_with = "deserialize_feature_map_into_vec")]
-    pub features: Vec<String>,
-}
-
-/// Deserializes a map [`HashMap<String, Vec<String>>`] into a [`Vec<String>`] of its keys.
-///
-/// Used by [`Package::features`] to discard the feature dependencies.
-fn deserialize_feature_map_into_vec<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let result = <HashMap<String, Vec<String>>>::deserialize(deserializer)?;
-    Ok(result.into_keys().collect())
+    pub features: HashMap<String, Vec<String>>,
 }
