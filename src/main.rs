@@ -6,7 +6,7 @@ mod metadata;
 mod runner;
 
 use cli::CLI;
-use combos::{feature_combos, ncr};
+use combos::{estimate_combos, feature_combos};
 use config::{load_config, Config};
 use intern::FeatureStorage;
 use metadata::{load_metadata, Package};
@@ -42,9 +42,8 @@ fn main() {
         let max_k = storage
             .len()
             .min(config.features.max_combo_size.unwrap_or(usize::MAX));
-        let estimated_checks: u128 = (0..=max_k)
-            .map(|k| ncr(storage.len() as u128, k as u128).unwrap())
-            .sum();
+
+        let estimated_checks = estimate_combos(storage.len() as u128, max_k as u128).unwrap();
 
         println!("Package {name} with {} features.", storage.len());
         println!("Estimated checks: {}", estimated_checks);
