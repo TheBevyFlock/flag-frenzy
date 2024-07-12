@@ -1,3 +1,4 @@
+mod chunk;
 mod cli;
 mod combos;
 mod config;
@@ -6,6 +7,7 @@ mod metadata;
 mod runner;
 
 use anyhow::{bail, Context};
+use chunk::select_chunk;
 use cli::CLI;
 use combos::{estimate_combos, feature_combos};
 use config::{load_config, Config};
@@ -14,7 +16,9 @@ use metadata::{load_metadata, Package};
 use runner::check_with_features;
 
 fn main() -> anyhow::Result<()> {
-    let cli: CLI = argh::from_env();
+    let cli = argh::from_env::<CLI>()
+        .verify()
+        .context("Failed to verify CLI flags.")?;
 
     let config = match cli.config {
         Some(ref path) => {
@@ -25,9 +29,16 @@ fn main() -> anyhow::Result<()> {
 
     let metadata = load_metadata(&cli.manifest_path).context("Failed to load Cargo metadata.")?;
 
+    let chunk = {
+        let total_chunks = cli.total_chunks.unwrap_or(1);
+        let chunk = cli.chunk.unwrap_or(0);
+
+        select_chunk(total_chunks, chunk, &metadata.packages, &config)
+    };
+
     let mut failures = Vec::new();
 
-    for package in metadata.packages {
+    for package in chunk {
         let Package { name, features } = package;
         let config = config.get(&name);
         let storage = intern_features(features, &config.features.skip);
@@ -77,7 +88,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Interns all features within the given [`Vec<String>`], skipping any provided.
-fn intern_features(features: Vec<String>, skip: &[String]) -> FeatureStorage {
+fn intern_features(features: &[String], skip: &[String]) -> FeatureStorage {
     let mut storage = FeatureStorage::with_capacity_and_key(features.len());
 
     for feature in features {
@@ -85,7 +96,8 @@ fn intern_features(features: Vec<String>, skip: &[String]) -> FeatureStorage {
             continue;
         }
 
-        storage.insert(feature);
+        // TODO: Avoid cloning here.
+        storage.insert(feature.clone());
     }
 
     storage
