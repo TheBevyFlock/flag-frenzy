@@ -1,3 +1,5 @@
+use anyhow::Context;
+
 use crate::intern::{FeatureKey, FeatureStorage};
 use std::{
     ffi::OsStr,
@@ -11,7 +13,7 @@ pub fn check_with_features(
     manifest_path: &Path,
     features: &[FeatureKey],
     storage: &FeatureStorage,
-) -> ExitStatus {
+) -> anyhow::Result<ExitStatus> {
     // Create comma-separated list of features.
     let features =
         features
@@ -32,5 +34,5 @@ pub fn check_with_features(
         .arg("--quiet")
         .args(["--message-format", "short"])
         .status()
-        .unwrap()
+        .context("Failed to spawn `cargo-check`.")
 }

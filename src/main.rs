@@ -54,7 +54,8 @@ fn main() -> anyhow::Result<()> {
 
             println!("\tChecking: {:?}", names);
 
-            let status = check_with_features(&name, &cli.manifest_path, &combo, &storage);
+            let status = check_with_features(&name, &cli.manifest_path, &combo, &storage)
+                .with_context(|| format!("Tried checking package {name}."))?;
 
             if !status.success() {
                 failures.push(format!(

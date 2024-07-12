@@ -18,10 +18,9 @@ impl Config {
     pub fn new(mut packages: HashMap<String, PackageConfig>) -> Self {
         let global = packages.remove("global").unwrap_or_default();
 
-        // Apply global's values as defaults to all other configs.
+        // Apply global's values as defaults to all other configs. This must be kept up-to-date
+        // with `PackageConfigFeatures`.
         for PackageConfig { features: package } in packages.values_mut() {
-            // Override any defaults. This must be kept up-to-date with `PackageConfigFeatures`.
-
             if package.required.is_empty() {
                 package.required.clone_from(&global.features.required);
             }
