@@ -142,7 +142,7 @@ mod tests {
     fn size() {
         let combos: Box<_> = Combos::new(7, 2).collect();
 
-        assert_eq!(combos.len(), ncr(7, 2) as usize);
+        assert_eq!(combos.len() as u128, ncr(7, 2).unwrap());
 
         for combo in combos.into_iter() {
             assert_eq!(combo.len(), 2);

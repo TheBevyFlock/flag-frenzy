@@ -42,8 +42,8 @@ fn main() {
         let max_k = storage
             .len()
             .min(config.features.max_combo_size.unwrap_or(usize::MAX));
-        let estimated_checks: u64 = (0..=max_k)
-            .map(|k| ncr(storage.len() as u64, k as u64))
+        let estimated_checks: u128 = (0..=max_k)
+            .map(|k| ncr(storage.len() as u128, k as u128).unwrap())
             .sum();
 
         println!("Package {name} with {} features.", storage.len());
