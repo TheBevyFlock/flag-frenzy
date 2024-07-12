@@ -14,6 +14,7 @@ use config::{load_config, Config};
 use intern::FeatureStorage;
 use metadata::{load_metadata, Package};
 use runner::check_with_features;
+use std::collections::HashMap;
 
 fn main() -> anyhow::Result<()> {
     let cli = argh::from_env::<CLI>()
@@ -41,7 +42,11 @@ fn main() -> anyhow::Result<()> {
     for package in chunk {
         let Package { name, features } = package;
         let config = config.get(&name);
-        let storage = intern_features(features, &config.features.skip);
+        let storage = intern_features(
+            features,
+            &config.features.skip,
+            config.features.skip_optional_deps,
+        );
 
         // The number of features or the max combo size, whichever is smaller.
         let max_k = config.features.max_combo_size;
@@ -88,11 +93,15 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Interns all features within the given [`Vec<String>`], skipping any provided.
-fn intern_features(features: &[String], skip: &[String]) -> FeatureStorage {
+fn intern_features(
+    features: &HashMap<String, Vec<String>>,
+    skip: &[String],
+    skip_optional_deps: bool,
+) -> FeatureStorage {
     let mut storage = FeatureStorage::with_capacity_and_key(features.len());
 
-    for feature in features {
-        if skip.contains(&feature) {
+    for (feature, deps) in features {
+        if skip.contains(&feature) || (skip_optional_deps && is_optional_dep(&feature, &deps)) {
             continue;
         }
 
@@ -101,4 +110,8 @@ fn intern_features(features: &[String], skip: &[String]) -> FeatureStorage {
     }
 
     storage
+}
+
+fn is_optional_dep(feature: &str, deps: &[String]) -> bool {
+    deps == [format!("dep:{feature}")]
 }
