@@ -17,6 +17,32 @@ pub struct CLI {
     /// the path to the config folder
     #[argh(option)]
     pub config: Option<PathBuf>,
+
+    /// the chunk that will be checked
+    #[argh(option)]
+    pub chunk: Option<usize>,
+
+    /// the total amount of chunks
+    #[argh(option)]
+    pub total_chunks: Option<usize>,
+}
+
+impl CLI {
+    /// Verifies that the arguments specified are compatible with each other.
+    pub fn verify(self) -> anyhow::Result<Self> {
+        // Check that, if chunking is enabled, both flags are specified.
+        ensure!(
+            !(self.chunk.is_some() ^ self.total_chunks.is_some()),
+            "`--chunk` and `--total-chunks` require each other. Both or neither must be specified."
+        );
+
+        // Check that chunk < total_chunks.
+        if let (Some(chunk), Some(total_chunks)) = (self.chunk, self.total_chunks) {
+            ensure!(chunk < total_chunks, "Chunk must be within range [0..total_chunks), but is is {chunk} which is >= {total_chunks}.");
+        }
+
+        Ok(self)
+    }
 }
 
 /// Represents the output of `cargo-locate-project`.
