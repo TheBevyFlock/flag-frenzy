@@ -1,4 +1,4 @@
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use std::collections::HashMap;
 
 /// A subset of the metadata returned by `cargo-metadata` that's required for this application.
