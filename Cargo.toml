@@ -21,3 +21,6 @@ slotmap = "1.0.7"
 
 # Custom errors.
 thiserror = "1.0.62"
+
+# Error propagation and contexts.
+anyhow = "1.0.86"

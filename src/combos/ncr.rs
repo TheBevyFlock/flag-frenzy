@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, PartialEq, Debug)]
-#[error("integer operation overflowed")]
+#[error("Integer operation overflowed.")]
 pub struct IntegerOverflowError;
 
 /// Calculates the number of combinations for a pool of size `n` and a combo size of `r`.

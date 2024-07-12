@@ -1,7 +1,7 @@
 use super::Metadata;
+use anyhow::{bail, ensure, Context};
 use std::{
     ffi::OsStr,
-    io,
     path::Path,
     process::{Command, Stdio},
 };
@@ -14,8 +14,8 @@ const FORMAT_VERSION: &str = "1";
 /// # Panics
 ///
 /// If `manifest_path` is not a file.
-pub fn load_metadata(manifest_path: &Path) -> io::Result<Metadata> {
-    assert!(manifest_path.is_file());
+pub fn load_metadata(manifest_path: &Path) -> anyhow::Result<Metadata> {
+    ensure!(manifest_path.is_file(), "{manifest_path:?} is not a file.");
 
     let output = Command::new("cargo")
         .stderr(Stdio::inherit()) // Print errors directly to terminal.
@@ -24,13 +24,13 @@ pub fn load_metadata(manifest_path: &Path) -> io::Result<Metadata> {
         .args(["--format-version", FORMAT_VERSION])
         .arg("--no-deps") // We only want the crates in this workspace.
         .args(["--color", "never"]) // Do not output ANSI escape codes.
-        .output()?;
+        .output()
+        .context("Could not spawn `cargo-metadata` process.")?;
 
-    if output.status.success() {
-        serde_json::from_slice(&output.stdout).map_err(io::Error::other)
-    } else {
-        Err(io::Error::other(
-            "`cargo-metadata` exited with a non-zero exit code.",
-        ))
+    if !output.status.success() {
+        bail!("`cargo-metadata` exited with a non-zero exit code.")
     }
+
+    serde_json::from_slice::<Metadata>(&output.stdout)
+        .context("Failed to parse output of `cargo-metadata`.")
 }
