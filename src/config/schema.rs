@@ -71,6 +71,9 @@ pub struct PackageConfigFeatures {
     /// max_combo_size = 4
     /// ```
     pub max_combo_size: Option<usize>,
+
+    #[serde(default)]
+    pub skip_optional_deps: bool,
 }
 
 /// An untagged enum that represents singular or multiple required features.
