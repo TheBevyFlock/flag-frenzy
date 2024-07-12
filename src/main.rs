@@ -1,3 +1,4 @@
+mod chunk;
 mod cli;
 mod combos;
 mod config;
