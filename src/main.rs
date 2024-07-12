@@ -33,13 +33,11 @@ fn main() -> anyhow::Result<()> {
         let storage = intern_features(features, &config.features.skip);
 
         // The number of features or the max combo size, whichever is smaller.
-        let max_k = storage
-            .len()
-            .min(config.features.max_combo_size.unwrap_or(usize::MAX));
+        let max_k = config.features.max_combo_size;
 
-        let estimated_checks = estimate_combos(storage.len() as u128, max_k as u128)
+        let estimated_checks = estimate_combos(storage.len() as u128, max_k.map(|k| k as u128))
             .context("Consider decreasing the max combo size in the config.")
-            .with_context(|| format!("Total features: {}, Max combo size: {max_k}", storage.len()))
+            .with_context(|| format!("Total features: {}, Max combo size: {max_k:?}", storage.len()))
             .with_context(|| format!("Unable to estimate checks required for all feature combinations of package {name}."))?;
 
         println!("Package {name} with {} features.", storage.len());

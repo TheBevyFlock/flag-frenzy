@@ -31,8 +31,9 @@ pub fn ncr(n: u128, r: u128) -> Result<u128, IntegerOverflowError> {
     Ok(acc)
 }
 
-pub fn estimate_combos(n: u128, max_k: u128) -> Result<u128, IntegerOverflowError> {
+pub fn estimate_combos(n: u128, max_k: Option<u128>) -> Result<u128, IntegerOverflowError> {
     let mut sum = 0;
+    let max_k = max_k.unwrap_or(n);
 
     for k in 0..=max_k {
         let c = ncr(n, k)?;

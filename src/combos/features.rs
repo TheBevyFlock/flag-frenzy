@@ -3,10 +3,11 @@ use crate::intern::{FeatureKey, FeatureStorage};
 
 pub fn feature_combos(
     storage: &FeatureStorage,
-    max_k: usize,
+    max_k: Option<usize>,
 ) -> impl Iterator<Item = Box<[FeatureKey]>> {
     let total_features = storage.len();
     let all_keys: Box<[FeatureKey]> = storage.keys().collect();
+    let max_k = max_k.unwrap_or(total_features);
 
     (0..=max_k)
         .flat_map(move |k| Combos::new(total_features, k))
