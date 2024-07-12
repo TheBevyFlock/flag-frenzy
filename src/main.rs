@@ -96,6 +96,7 @@ fn intern_features(features: &[String], skip: &[String]) -> FeatureStorage {
             continue;
         }
 
+        // TODO: Avoid cloning here.
         storage.insert(feature.clone());
     }
 
