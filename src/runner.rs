@@ -1,10 +1,9 @@
+use crate::intern::{FeatureKey, FeatureStorage};
 use std::{
     ffi::OsStr,
     path::Path,
     process::{Command, ExitStatus},
 };
-
-use crate::intern::{FeatureKey, FeatureStorage};
 
 /// Runs `cargo-check` on a package with the specified features.
 pub fn check_with_features(
