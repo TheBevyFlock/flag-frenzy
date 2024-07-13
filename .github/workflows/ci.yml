@@ -46,5 +46,8 @@ jobs:
           # Installs Alsa, udev, and Wayland.
           sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
 
+      - name: Build tool
+        run: cargo build --release
+
       - name: Check all features
-        run: cargo run -- --manifest-path bevy/Cargo.toml --config config --total-chunks 5 --chunk ${{ matrix.chunk }}
+        run: cargo run --release -- --manifest-path bevy/Cargo.toml --config config --total-chunks 5 --chunk ${{ matrix.chunk }}
