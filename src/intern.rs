@@ -1,4 +1,8 @@
-use std::hash::{BuildHasher, Hash, Hasher, RandomState};
+use crate::config::PackageConfig;
+use std::{
+    collections::HashMap,
+    hash::{BuildHasher, RandomState},
+};
 
 /// A cheap key to a feature in [`FeatureStorage`].
 #[repr(transparent)]
@@ -17,7 +21,7 @@ pub struct FeatureStorage {
 
 impl FeatureStorage {
     /// Creates a new [`FeatureStorage`] with a pre-allocated capacity.
-    /// 
+    ///
     /// See [`Vec::with_capacity()`] for a greater explanation on what this does.
     pub fn with_capacity(capacity: usize) -> Self {
         FeatureStorage {
@@ -27,7 +31,7 @@ impl FeatureStorage {
     }
 
     /// Retrieves a feature name from a key.
-    /// 
+    ///
     /// This will return [`None`] if nothing is found.
     pub fn get(&self, key: FeatureKey) -> Option<&str> {
         match self.inner.binary_search_by_key(&key.0, |(h, _)| *h) {
@@ -65,8 +69,39 @@ impl FeatureStorage {
     /// Note that this does not actually insert the string into the map. See [`Self::insert()`] for
     /// this behavior.
     pub fn create_key(&self, s: &str) -> FeatureKey {
-        let mut hasher = self.build_hasher.build_hasher();
-        s.hash(&mut hasher);
-        FeatureKey(hasher.finish())
+        FeatureKey(self.build_hasher.hash_one(s))
     }
+}
+
+/// Interns all features within the given [`Vec<String>`].
+///
+/// This skips features specified in passed [`PackageConfig`], and additionally optional
+/// dependencies if enabled.
+pub fn intern_features(
+    features: HashMap<String, Vec<String>>,
+    PackageConfig { features: config }: &PackageConfig,
+) -> FeatureStorage {
+    /// Returns true if a feature is likely an optional dependency.
+    ///
+    /// This is done by detecting if the feature dependencies solely contains a crate of the same name.
+    /// If `feature` was `"foo"` and deps was `["dep:foo"]`, for example, then it is likely an optional
+    /// dependency.
+    fn is_optional_dep(feature: &str, deps: &[String]) -> bool {
+        deps == [format!("dep:{feature}")]
+    }
+
+    let mut storage = FeatureStorage::with_capacity(features.len());
+
+    for (feature, deps) in features {
+        // If the feature should be skipped, or is an optional dependency, don't add it to storage.
+        if config.skip.contains(&feature)
+            || (config.skip_optional_deps && is_optional_dep(&feature, &deps))
+        {
+            continue;
+        }
+
+        storage.insert(feature);
+    }
+
+    storage
 }

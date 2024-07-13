@@ -10,11 +10,10 @@ use anyhow::{bail, Context};
 use chunk::select_chunk;
 use cli::CLI;
 use combos::{estimate_combos, feature_combos};
-use config::{load_config, Config, PackageConfig};
-use intern::FeatureStorage;
+use config::{load_config, Config};
+use intern::intern_features;
 use metadata::{load_metadata, Metadata, Package};
 use runner::check_with_features;
-use std::collections::HashMap;
 
 fn main() -> anyhow::Result<()> {
     let cli = argh::from_env::<CLI>()
@@ -38,7 +37,7 @@ fn main() -> anyhow::Result<()> {
     for package in packages {
         let Package { name, features } = package;
         let package_config = config.get(&name);
-        let storage = intern_features(features, &package_config);
+        let storage = intern_features(features, package_config);
 
         // The number of features or the max combo size, whichever is smaller.
         let max_k = package_config.features.max_combo_size;
@@ -130,43 +129,10 @@ fn process_packages(
 
     // Filter packages into chunks, if enabled.
     if let (Some(chunk), Some(total_chunks)) = (cli.chunk, cli.total_chunks) {
-        packages = select_chunk(total_chunks, chunk, packages, &config);
+        packages = select_chunk(total_chunks, chunk, packages, config);
     }
 
     Ok(packages)
-}
-
-/// Interns all features within the given [`Vec<String>`].
-///
-/// This skips features specified in passed [`PackageConfig`], and additionally optional
-/// dependencies if enabled.
-fn intern_features(
-    features: HashMap<String, Vec<String>>,
-    PackageConfig { features: config }: &PackageConfig,
-) -> FeatureStorage {
-    let mut storage = FeatureStorage::with_capacity(features.len());
-
-    for (feature, deps) in features {
-        // If the feature should be skipped, or is an optional dependency, don't add it to storage.
-        if config.skip.contains(&feature)
-            || (config.skip_optional_deps && is_optional_dep(&feature, &deps))
-        {
-            continue;
-        }
-
-        storage.insert(feature);
-    }
-
-    storage
-}
-
-/// Returns true if a feature is likely an optional dependency.
-///
-/// This is done by detecting if the feature dependencies solely contains a crate of the same name.
-/// If `feature` was `"foo"` and deps was `["dep:foo"]`, for example, then it is likely an optional
-/// dependency.
-fn is_optional_dep(feature: &str, deps: &[String]) -> bool {
-    deps == [format!("dep:{feature}")]
 }
 
 struct CheckFailure {
