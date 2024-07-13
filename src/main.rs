@@ -52,20 +52,20 @@ fn main() -> anyhow::Result<()> {
         println!("Estimated checks: {}", estimated_checks);
 
         for combo in feature_combos(&storage, max_k) {
-            let mut names = Vec::with_capacity(combo.len());
+            let mut features = Vec::with_capacity(combo.len());
 
             for &key in combo.iter() {
-                names.push(storage.get(key).unwrap());
+                features.push(storage.get(key).unwrap());
             }
 
-            println!("\tChecking: {:?}", names);
+            println!("\tChecking: {:?}", features);
 
             let status = check_with_features(&name, &cli.manifest_path, &combo, &storage)
                 .with_context(|| format!("Tried checking package {name}."))?;
 
             if !status.success() {
                 failures.push(format!(
-                    "Failed checking package {name} with features {names:?}"
+                    "Failed checking package {name} with features {features:?}"
                 ));
             }
         }
@@ -80,6 +80,8 @@ fn main() -> anyhow::Result<()> {
 
         bail!("Some packages failed to be checked.");
     }
+
+    println!("Feature combination checks successful! Congrats :)");
 
     Ok(())
 }
@@ -128,7 +130,10 @@ fn process_packages(
     Ok(packages)
 }
 
-/// Interns all features within the given [`Vec<String>`], skipping any provided.
+/// Interns all features within the given [`Vec<String>`].
+///
+/// This skips features specified in passed [`PackageConfig`], and additionally optional
+/// dependencies if enabled.
 fn intern_features(
     features: HashMap<String, Vec<String>>,
     PackageConfig { features: config }: &PackageConfig,
@@ -136,6 +141,7 @@ fn intern_features(
     let mut storage = FeatureStorage::with_capacity_and_key(features.len());
 
     for (feature, deps) in features {
+        // If the feature should be skipped, or is an optional dependency, don't add it to storage.
         if config.skip.contains(&feature)
             || (config.skip_optional_deps && is_optional_dep(&feature, &deps))
         {
@@ -148,6 +154,11 @@ fn intern_features(
     storage
 }
 
+/// Returns true if a feature is likely an optional dependency.
+///
+/// This is done by detecting if the feature dependencies solely contains a crate of the same name.
+/// If `feature` was `"foo"` and deps was `["dep:foo"]`, for example, then it is likely an optional
+/// dependency.
 fn is_optional_dep(feature: &str, deps: &[String]) -> bool {
     deps == [format!("dep:{feature}")]
 }
