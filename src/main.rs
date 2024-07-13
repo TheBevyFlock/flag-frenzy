@@ -62,6 +62,8 @@ fn main() -> anyhow::Result<()> {
                 features.push(storage.get(key).unwrap());
             }
 
+            features.sort_unstable();
+
             println!("\tChecking: {:?}", features);
 
             let status = check_with_features(&name, &cli.manifest_path, &combo, &storage)
