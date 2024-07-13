@@ -86,6 +86,15 @@ pub enum RequiredFeature {
     More(Vec<String>),
 }
 
+impl RequiredFeature {
+    pub fn as_slice(&self) -> &[String] {
+        match self {
+            Self::One(x) => std::slice::from_ref(x),
+            Self::More(x) => x,
+        }
+    }
+}
+
 /// Used when deserializing [`PackageConfigFeatures::incompatible`] to ensure that at least 2
 /// features are in each feature set.
 fn deserialize_incompatible_features<'de, D>(deserializer: D) -> Result<Vec<Vec<String>>, D::Error>

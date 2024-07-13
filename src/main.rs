@@ -51,7 +51,12 @@ fn main() -> anyhow::Result<()> {
         println!("Package {name} with {} features.", storage.len());
         println!("Estimated checks: {}", estimated_checks);
 
-        for combo in feature_combos(&storage, max_k) {
+        for combo in feature_combos(
+            &storage,
+            max_k,
+            &package_config.features.required,
+            &package_config.features.incompatible,
+        ) {
             let mut features = Vec::with_capacity(combo.len());
 
             for &key in combo.iter() {
