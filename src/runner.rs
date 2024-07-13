@@ -1,6 +1,5 @@
-use anyhow::Context;
-
 use crate::intern::{FeatureKey, FeatureStorage};
+use anyhow::Context;
 use std::{
     ffi::OsStr,
     path::Path,

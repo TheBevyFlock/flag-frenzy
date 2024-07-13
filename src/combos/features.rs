@@ -28,16 +28,13 @@ pub fn feature_combos<'a>(
         .filter(move |combo| {
             // TODO: Avoid this step by retrieving key from value in storage.
             // Get the string representation of all feature keys, for reference.
-            let combo: Vec<_> = combo
-                .into_iter()
-                .map(|&key| storage.get(key).unwrap())
-                .collect();
+            let combo: Vec<_> = combo.iter().map(|&key| storage.get(key).unwrap()).collect();
 
             for set in required {
                 // If the combo does not contain any of the features in the set, skip it.
                 if !set
                     .as_slice()
-                    .into_iter()
+                    .iter()
                     .any(|feature| combo.contains(&feature.as_str()))
                 {
                     return false;
@@ -46,10 +43,7 @@ pub fn feature_combos<'a>(
 
             for set in incompatible {
                 // If all features in an incompatible set are in the combination, skip it.
-                if set
-                    .into_iter()
-                    .all(|feature| combo.contains(&feature.as_str()))
-                {
+                if set.iter().all(|feature| combo.contains(&feature.as_str())) {
                     return false;
                 }
             }
