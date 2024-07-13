@@ -1,6 +1,10 @@
 [package]
 name = "flag-frenzy"
+authors = ["BD103"]
 edition = "2021"
+description = "Checks combinations of Cargo feature flags for a workspace."
+repository = "https://github.com/TheBevyFlock/flag-frenzy"
+license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
