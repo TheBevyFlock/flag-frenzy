@@ -18,6 +18,10 @@ pub struct CLI {
     #[argh(option)]
     pub config: Option<PathBuf>,
 
+    /// check a specific package
+    #[argh(option, short = 'p')]
+    pub package: Option<String>,
+
     /// the chunk that will be checked
     #[argh(option)]
     pub chunk: Option<usize>,
@@ -40,6 +44,12 @@ impl CLI {
         if let (Some(chunk), Some(total_chunks)) = (self.chunk, self.total_chunks) {
             ensure!(chunk < total_chunks, "Chunk must be within range [0..total_chunks), but is is {chunk} which is >= {total_chunks}.");
         }
+
+        // Check that chunking and specific package selection are not both enabled.
+        ensure!(
+            !(self.chunk.is_some() && self.package.is_some()),
+            "`--chunk` and `--package` are incompatible with each other. Please pick one."
+        );
 
         Ok(self)
     }

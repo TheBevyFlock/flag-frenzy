@@ -10,9 +10,9 @@ use anyhow::{bail, Context};
 use chunk::select_chunk;
 use cli::CLI;
 use combos::{estimate_combos, feature_combos};
-use config::{load_config, Config};
+use config::{load_config, Config, PackageConfig};
 use intern::FeatureStorage;
-use metadata::{load_metadata, Package};
+use metadata::{load_metadata, Metadata, Package};
 use runner::check_with_features;
 use std::collections::HashMap;
 
@@ -30,26 +30,18 @@ fn main() -> anyhow::Result<()> {
 
     let metadata = load_metadata(&cli.manifest_path).context("Failed to load Cargo metadata.")?;
 
-    let chunk = {
-        let total_chunks = cli.total_chunks.unwrap_or(1);
-        let chunk = cli.chunk.unwrap_or(0);
-
-        select_chunk(total_chunks, chunk, &metadata.packages, &config)
-    };
+    let packages =
+        process_packages(metadata, &cli, &config).context("Failure while processing packages.")?;
 
     let mut failures = Vec::new();
 
-    for package in chunk {
+    for package in packages {
         let Package { name, features } = package;
-        let config = config.get(&name);
-        let storage = intern_features(
-            features,
-            &config.features.skip,
-            config.features.skip_optional_deps,
-        );
+        let package_config = config.get(&name);
+        let storage = intern_features(features, &package_config);
 
         // The number of features or the max combo size, whichever is smaller.
-        let max_k = config.features.max_combo_size;
+        let max_k = package_config.features.max_combo_size;
 
         let estimated_checks = estimate_combos(storage.len() as u128, max_k.map(|k| k as u128))
             .context("Consider decreasing the max combo size in the config.")
@@ -92,21 +84,65 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Processes the packages in a [`Metadata`] and returns them in a [`Vec`].
+///
+/// Specifically, this:
+///
+/// - Returns a single package if `--package` is specified in the CLI.
+/// - Sorts the packages by their name.
+/// - Filters packages into chunks if enabled.
+fn process_packages(
+    metadata: Metadata,
+    cli: &CLI,
+    config: &Config,
+) -> anyhow::Result<Vec<Package>> {
+    let mut packages = metadata.packages;
+
+    // Handle `--package` specifier.
+    if let Some(name) = &cli.package {
+        let mut package = None;
+
+        // Search for a package with the same name as specified by the CLI.
+        for i in 0..packages.len() {
+            if &packages[i].name == name {
+                package = Some(packages.swap_remove(i));
+                break;
+            }
+        }
+
+        // If a package is found, return it.
+        match package {
+            Some(package) => return Ok(vec![package]),
+            None => bail!("Could not find package {name} specified by `--package`."),
+        }
+    }
+
+    // Sort packages based on name.
+    packages.sort_unstable_by(|a, b| a.name.cmp(&b.name));
+
+    // Filter packages into chunks, if enabled.
+    if let (Some(chunk), Some(total_chunks)) = (cli.chunk, cli.total_chunks) {
+        packages = select_chunk(total_chunks, chunk, packages, &config);
+    }
+
+    Ok(packages)
+}
+
 /// Interns all features within the given [`Vec<String>`], skipping any provided.
 fn intern_features(
-    features: &HashMap<String, Vec<String>>,
-    skip: &[String],
-    skip_optional_deps: bool,
+    features: HashMap<String, Vec<String>>,
+    PackageConfig { features: config }: &PackageConfig,
 ) -> FeatureStorage {
     let mut storage = FeatureStorage::with_capacity_and_key(features.len());
 
     for (feature, deps) in features {
-        if skip.contains(&feature) || (skip_optional_deps && is_optional_dep(&feature, &deps)) {
+        if config.skip.contains(&feature)
+            || (config.skip_optional_deps && is_optional_dep(&feature, &deps))
+        {
             continue;
         }
 
-        // TODO: Avoid cloning here.
-        storage.insert(feature.clone());
+        storage.insert(feature);
     }
 
     storage

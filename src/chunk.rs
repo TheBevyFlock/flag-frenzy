@@ -3,9 +3,9 @@ use crate::{combos::estimate_combos, config::Config, metadata::Package};
 pub fn select_chunk<'a>(
     total_chunks: usize,
     chunk: usize,
-    packages: &'a [Package],
+    packages: Vec<Package>,
     config: &Config,
-) -> Vec<&'a Package> {
+) -> Vec<Package> {
     assert!(chunk < total_chunks);
 
     let sorted = sort_by_combos(packages, config);
@@ -20,7 +20,7 @@ pub fn select_chunk<'a>(
 ///
 /// The returned [`Vec`] contains a tuples of the packages and their corresponding combinations. It
 /// is sorted so that the package with the greatest amount of combinations will be last.
-fn sort_by_combos<'a>(packages: &'a [Package], config: &Config) -> Vec<(&'a Package, u128)> {
+fn sort_by_combos<'a>(packages: Vec<Package>, config: &Config) -> Vec<(Package, u128)> {
     let mut sorted = Vec::with_capacity(packages.len());
 
     // Calculate the amount of combos for each package, then add it to the list.
@@ -43,8 +43,8 @@ fn sort_by_combos<'a>(packages: &'a [Package], config: &Config) -> Vec<(&'a Pack
 }
 
 /// Creates a list of chunks from a list of packages sorted by their max amount of combinations.
-fn create_chunks(mut sorted: Vec<(&Package, u128)>, total_chunks: usize) -> Vec<Vec<&Package>> {
-    let mut chunks = vec![Vec::new(); total_chunks];
+fn create_chunks(mut sorted: Vec<(Package, u128)>, total_chunks: usize) -> Vec<Vec<Package>> {
+    let mut chunks = vec_from_fn(|| Vec::new(), total_chunks);
     let mut sizes = vec![0_u128; total_chunks];
 
     while let Some((package, combos)) = sorted.pop() {
@@ -61,4 +61,17 @@ fn create_chunks(mut sorted: Vec<(&Package, u128)>, total_chunks: usize) -> Vec<
     }
 
     chunks
+}
+
+/// Creates a new [`Vec`] of a given length by calling the given closure for each element.
+///
+/// This is useful when initializing a [`Vec<T>`] where `T` does not implement [`Clone`].
+fn vec_from_fn<T>(mut f: impl FnMut() -> T, len: usize) -> Vec<T> {
+    let mut res = Vec::with_capacity(len);
+
+    for _ in 0..len {
+        res.push((f)());
+    }
+
+    res
 }
