@@ -71,7 +71,7 @@ fn main() -> anyhow::Result<()> {
             if !status.success() {
                 failures.push(CheckFailure {
                     package: name.clone(),
-                    features: features.into_iter().cloned().collect(),
+                    features: features.into_iter().map(str::to_string).collect(),
                 });
             }
         }
@@ -144,7 +144,7 @@ fn intern_features(
     features: HashMap<String, Vec<String>>,
     PackageConfig { features: config }: &PackageConfig,
 ) -> FeatureStorage {
-    let mut storage = FeatureStorage::with_capacity_and_key(features.len());
+    let mut storage = FeatureStorage::with_capacity(features.len());
 
     for (feature, deps) in features {
         // If the feature should be skipped, or is an optional dependency, don't add it to storage.

@@ -38,7 +38,7 @@ pub fn feature_combos<'a>(
                 if !set
                     .as_slice()
                     .into_iter()
-                    .any(|feature| combo.contains(&feature))
+                    .any(|feature| combo.contains(&feature.as_str()))
                 {
                     return false;
                 }
@@ -46,7 +46,10 @@ pub fn feature_combos<'a>(
 
             for set in incompatible {
                 // If all features in an incompatible set are in the combination, skip it.
-                if set.into_iter().all(|feature| combo.contains(&feature)) {
+                if set
+                    .into_iter()
+                    .all(|feature| combo.contains(&feature.as_str()))
+                {
                     return false;
                 }
             }
