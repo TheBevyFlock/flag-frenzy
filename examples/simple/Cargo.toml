@@ -1,0 +1,8 @@
+[package]
+name = "simple"
+edition = "2021"
+
+[features]
+foo = []
+bar = []
+baz = ["bar"]

@@ -1,5 +1,5 @@
 # Cargo build files.
-/target/
+target/
 
 # Checked out locally to check flags.
 /bevy/

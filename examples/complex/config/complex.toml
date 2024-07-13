@@ -1,0 +1,7 @@
+[features]
+required = [
+    "always-required",
+    ["choose-required-1", "choose-required-2"],
+]
+incompatible = [["incompatible-1", "incompatible-2"]]
+skip = ["always-fails"]

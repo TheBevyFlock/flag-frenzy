@@ -6,6 +6,7 @@ description = "Checks combinations of Cargo feature flags for a workspace."
 repository = "https://github.com/TheBevyFlock/flag-frenzy"
 license = "MIT OR Apache-2.0"
 publish = false
+autoexamples = false
 
 [dependencies]
 # CLI argument parsing.

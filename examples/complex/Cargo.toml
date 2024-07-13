@@ -1,0 +1,14 @@
+[package]
+name = "complex"
+edition = "2021"
+
+[features]
+always-required = []
+
+choose-required-1 = []
+choose-required-2 = []
+
+incompatible-1 = []
+incompatible-2 = []
+
+always-fails = []
