@@ -64,9 +64,10 @@ fn main() -> anyhow::Result<()> {
                 .with_context(|| format!("Tried checking package {name}."))?;
 
             if !status.success() {
-                failures.push(format!(
-                    "Failed checking package {name} with features {features:?}"
-                ));
+                failures.push(CheckFailure {
+                    package: name.clone(),
+                    features: features.into_iter().cloned().collect(),
+                });
             }
         }
     }
@@ -74,8 +75,8 @@ fn main() -> anyhow::Result<()> {
     if !failures.is_empty() {
         eprintln!("Failure report:");
 
-        for failure in failures {
-            eprintln!("\t{failure}");
+        for CheckFailure { package, features } in failures {
+            eprintln!("\tFailed checking package {package} with features {features:?}.");
         }
 
         bail!("Some packages failed to be checked.");
@@ -161,4 +162,9 @@ fn intern_features(
 /// dependency.
 fn is_optional_dep(feature: &str, deps: &[String]) -> bool {
     deps == [format!("dep:{feature}")]
+}
+
+struct CheckFailure {
+    pub package: String,
+    pub features: Vec<String>,
 }
