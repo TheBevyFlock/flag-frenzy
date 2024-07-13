@@ -1,5 +1,5 @@
 use anyhow::{ensure, Context};
-use argh::FromArgs;
+use argh::{FromArgValue, FromArgs};
 use serde::Deserialize;
 use std::{
     path::PathBuf,
@@ -29,6 +29,10 @@ pub struct CLI {
     /// the total amount of chunks
     #[argh(option)]
     pub total_chunks: Option<usize>,
+
+    /// when to use color in the terminal output, either "always" or "never"
+    #[argh(option, default = "ColorChoice::Always")]
+    pub color: ColorChoice,
 }
 
 impl CLI {
@@ -52,6 +56,22 @@ impl CLI {
         );
 
         Ok(self)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ColorChoice {
+    Always,
+    Never,
+}
+
+impl FromArgValue for ColorChoice {
+    fn from_arg_value(value: &str) -> Result<Self, String> {
+        match value {
+            "always" => Ok(Self::Always),
+            "never" => Ok(Self::Never),
+            _ => Err("must be `always` or `never`.".to_string()),
+        }
     }
 }
 

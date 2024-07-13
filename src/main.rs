@@ -1,3 +1,4 @@
+mod ansi;
 mod chunk;
 mod cli;
 mod combos;
@@ -6,6 +7,7 @@ mod intern;
 mod metadata;
 mod runner;
 
+use ansi::*;
 use anyhow::{bail, Context};
 use chunk::select_chunk;
 use cli::CLI;
@@ -27,6 +29,15 @@ fn main() -> anyhow::Result<()> {
         None => Config::default(),
     };
 
+    let Color {
+        reset,
+        bold,
+        dim,
+        info,
+        success,
+        error,
+    } = Color::from_color_choice(cli.color);
+
     let metadata = load_metadata(&cli.manifest_path).context("Failed to load Cargo metadata.")?;
 
     let packages =
@@ -47,8 +58,11 @@ fn main() -> anyhow::Result<()> {
             .with_context(|| format!("Total features: {}, Max combo size: {max_k:?}", storage.len()))
             .with_context(|| format!("Unable to estimate checks required for all feature combinations of package {name}."))?;
 
-        println!("Package {name} with {} features.", storage.len());
-        println!("Estimated checks: {}", estimated_checks);
+        println!(
+            "{bold}Package {info}{name}{reset}{bold} with {info}{}{reset}{bold} features.{reset}",
+            storage.len()
+        );
+        println!("{bold}Estimated checks: {info}{}{reset}", estimated_checks);
 
         for combo in feature_combos(
             &storage,
@@ -64,7 +78,7 @@ fn main() -> anyhow::Result<()> {
 
             features.sort_unstable();
 
-            println!("\tChecking: {:?}", features);
+            println!("\t{dim}Checking:{reset} {info}{:?}{reset}", features);
 
             let status = check_with_features(&name, &cli.manifest_path, &combo, &storage)
                 .with_context(|| format!("Tried checking package {name}."))?;
@@ -79,16 +93,16 @@ fn main() -> anyhow::Result<()> {
     }
 
     if !failures.is_empty() {
-        eprintln!("Failure report:");
+        eprintln!("{error}{bold}Failure report:{reset}");
 
         for CheckFailure { package, features } in failures {
-            eprintln!("\tFailed checking package {package} with features {features:?}.");
+            eprintln!("\t{error}Failed checking package {bold}{package}{reset} {error}with features{reset} {features:?}.");
         }
 
         bail!("Some packages failed to be checked.");
     }
 
-    println!("Feature combination checks successful! Congrats :)");
+    println!("{success}{bold}Feature combination checks successful! Congrats :){reset}");
 
     Ok(())
 }
