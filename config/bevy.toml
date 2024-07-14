@@ -1,4 +1,8 @@
 [features]
 # Temporary hack, since `winit` requires at least one of these to compile.
+# May be improved by https://github.com/TheBevyFlock/flag-frenzy/issues/15.
 required = [["x11", "wayland"]]
+# Fails to build without `multi_threaded` feature.
+# Blocked by https://github.com/bevyengine/bevy/pull/13964.
+skip = ["sysinfo_plugin"]
 max_combo_size = 2
