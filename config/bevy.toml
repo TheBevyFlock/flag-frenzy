@@ -1,2 +1,4 @@
 [features]
+# Temporary hack, since `winit` requires at least one of these to compile.
+required = [["x11", "wayland"]]
 max_combo_size = 2
