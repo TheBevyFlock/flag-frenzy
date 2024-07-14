@@ -5,4 +5,7 @@ mod ncr;
 
 pub use self::combos::Combos;
 pub use self::features::feature_combos;
-pub use self::ncr::{estimate_combos, ncr};
+pub use self::ncr::estimate_combos;
+
+#[cfg(test)]
+pub use self::ncr::ncr;
