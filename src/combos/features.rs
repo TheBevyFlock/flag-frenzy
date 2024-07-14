@@ -12,7 +12,7 @@ pub fn feature_combos<'a>(
 ) -> impl Iterator<Item = Box<[FeatureKey]>> + 'a {
     let total_features = storage.len();
     let all_keys: Box<[FeatureKey]> = storage.keys().collect();
-    let max_k = max_k.unwrap_or(total_features);
+    let max_k = max_k.unwrap_or(total_features).min(total_features);
 
     (0..=max_k)
         .flat_map(move |k| Combos::new(total_features, k))
