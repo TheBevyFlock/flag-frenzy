@@ -18,9 +18,7 @@ use metadata::{load_metadata, Metadata, Package};
 use runner::check_with_features;
 
 fn main() -> anyhow::Result<()> {
-    let cli = argh::from_env::<CLI>()
-        .verify()
-        .context("Failed to verify CLI flags.")?;
+    let cli = CLI::from_env().context("Failed to verify CLI flags.")?;
 
     let config = match cli.config {
         Some(ref path) => {
