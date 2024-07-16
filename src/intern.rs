@@ -33,21 +33,12 @@ impl FeatureStorage {
     /// Retrieves a feature name from a key.
     ///
     /// This will return [`None`] if nothing is found.
+    #[must_use]
     pub fn get(&self, key: FeatureKey) -> Option<&str> {
         match self.inner.binary_search_by_key(&key.0, |(h, _)| *h) {
             Ok(i) => Some(&self.inner[i].1),
             Err(_) => None,
         }
-    }
-
-    /// Returns how many features are in storage.
-    pub fn len(&self) -> usize {
-        self.inner.len()
-    }
-
-    /// Returns an iterator over all [`FeatureKey`]s in this map.
-    pub fn keys(&self) -> impl Iterator<Item = FeatureKey> + '_ {
-        self.inner.iter().map(|(h, _)| FeatureKey(*h))
     }
 
     /// Inserts a feature into storage, returning its key.
@@ -64,10 +55,22 @@ impl FeatureStorage {
         FeatureKey(hash)
     }
 
+    /// Returns how many features are in storage.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    /// Returns an iterator over all [`FeatureKey`]s in this map.
+    pub fn keys(&self) -> impl Iterator<Item = FeatureKey> + '_ {
+        self.inner.iter().map(|(h, _)| FeatureKey(*h))
+    }
+
     /// Creates a key for a given string.
     ///
     /// Note that this does not actually insert the string into the map. See [`Self::insert()`] for
     /// this behavior.
+    #[must_use]
     pub fn create_key(&self, s: &str) -> FeatureKey {
         FeatureKey(self.build_hasher.hash_one(s))
     }
@@ -104,4 +107,98 @@ pub fn intern_features(
     }
 
     storage
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    impl FeatureStorage {
+        /// Shortcut function to create a new [`FeatureStorage`].
+        ///
+        /// As this is not used by the main application, it is only available during testing.
+        fn new() -> Self {
+            FeatureStorage {
+                inner: Vec::new(),
+                build_hasher: RandomState::new(),
+            }
+        }
+    }
+
+    #[test]
+    fn equal_features_are_equal_keys() {
+        let storage = FeatureStorage::new();
+
+        const FEATURE: &str = "nyan-cat";
+
+        let (key1, key2) = (storage.create_key(FEATURE), storage.create_key(FEATURE));
+
+        assert_eq!(
+            key1, key2,
+            "Hashing the same feature with the same storage does not produce the same key."
+        );
+    }
+
+    #[test]
+    fn insert_and_get_feature() {
+        let mut storage = FeatureStorage::new();
+
+        let keys: Vec<_> = (0..5).map(|i| storage.insert(i.to_string())).collect();
+
+        for i in 0..5 {
+            assert_eq!(
+                storage.get(keys[i]).unwrap(),
+                i.to_string(),
+                "The feature returned by `FeatureStorage::get()` is incorrect."
+            );
+        }
+    }
+
+    #[test]
+    fn iter_keys() {
+        let mut storage = FeatureStorage::new();
+
+        let mut inserted_keys: Vec<_> = (0..10)
+            .map(|i| storage.insert(i.to_string()))
+            .map(|FeatureKey(h)| h)
+            .collect();
+
+        let mut retrieved_keys: Vec<_> = storage.keys().map(|FeatureKey(h)| h).collect();
+
+        // We sort both lists to ensure that the order is equal, so that they can be compared.
+        inserted_keys.sort_unstable();
+        retrieved_keys.sort_unstable();
+
+        assert_eq!(inserted_keys, retrieved_keys, "The keys returned by `FeatureStorage::insert()` are not the keys returned by `FeatureStorage::keys()`.");
+    }
+
+    #[test]
+    fn len() {
+        let mut storage = FeatureStorage::new();
+
+        assert_eq!(
+            storage.len(),
+            0,
+            "`FeatureStorage` did not start out empty."
+        );
+
+        // Insert 2 unique features.
+        storage.insert("hello".to_string());
+        storage.insert("goodbye".to_string());
+
+        assert_eq!(
+            storage.len(),
+            2,
+            "`FeatureStorage::len()` did not reflect the amount of features in storage."
+        );
+
+        // Insert a duplicate feature.
+        storage.insert("hello".to_string());
+
+        assert_eq!(
+            storage.len(),
+            2,
+            "Feature was not de-duplicated by `FeatureStorage::insert()`."
+        );
+    }
 }
