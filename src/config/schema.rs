@@ -1,114 +1,126 @@
 use serde::{de::Error, Deserialize, Deserializer};
 
-/// Represents the configuration for a specific package.
-#[derive(Deserialize, Default, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct PackageConfig {
-    pub features: PackageConfigFeatures,
-}
-
-/// Represents feature-specific configuration for a package.
-#[derive(Deserialize, Default, Debug)]
-#[serde(deny_unknown_fields, default)]
-pub struct PackageConfigFeatures {
-    /// A list of feature sets that must be enabled.
-    ///
-    /// A feature set can either be a single string, for which that feature will always be enabled,
-    /// or an array of strings, for which combinations will be created.
-    ///
-    /// ```toml
-    /// [features]
-    /// required = [
-    ///     "foo",
-    ///     ["bar", "baz"],
-    /// ]
-    /// ```
-    ///
-    /// In this scenario, two combinations of features will be created: `["foo", "bar"]` and
-    /// `["foo", "baz"]`.
-    pub required: Vec<RequiredFeature>,
-
-    /// A list of feature sets that are incompatible with each other.
-    ///
-    /// ```toml
-    /// [features]
-    /// incompatible = [
-    ///     ["foo", "baz"],
-    /// ]
-    /// ```
-    ///
-    /// In this scenario if, a combination will be skipped if it contains _both_ `foo` and `baz`.
-    ///
-    /// If you need to always skip a feature, see [`skip`](Self::skip).
-    ///
-    /// # Panics
-    ///
-    /// If an individual feature set contains less than 2 features.
-    #[serde(deserialize_with = "deserialize_incompatible_features")]
-    pub incompatible: Vec<Vec<String>>,
-
-    /// A list of features that will always be skipped.
-    ///
-    /// ```toml
-    /// [features]
-    /// skip = ["bar"]
-    /// ```
-    ///
-    /// In this scenario, any combination containing `bar` will be skipped.
-    ///
-    /// To conditionally skip features based on other features, see
-    /// [`incompatible`](Self::incompatible).
-    pub skip: Vec<String>,
-
-    /// The limit on the size of combinations tested.
-    ///
-    /// Due to its nature, adding new features makes the total amount of combinations scale
-    /// quadratically. By setting the maximum combination size, it reduces the amount of
-    /// combinations tested while still catching most issues.
-    ///
-    /// ```toml
-    /// [features]
-    /// max_combo_size = 4
-    /// ```
+/// Represents the configuration for a specific crate.
+#[derive(Deserialize, Debug)]
+pub struct Config {
     pub max_combo_size: Option<usize>,
 
     #[serde(default)]
     pub skip_optional_deps: bool,
+
+    #[serde(default, rename = "rule")]
+    pub rules: Vec<Rule>,
 }
 
-/// An untagged enum that represents singular or multiple required features.
-///
-/// See [`PackageConfigFeatures::required`].
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, PartialEq, Debug)]
+pub struct Rule {
+    pub when: TrueOrFeatureSet,
+    pub require: Option<FeatureSet>,
+    pub forbid: Option<TrueOrFeatureSet>,
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
 #[serde(untagged)]
-pub enum RequiredFeature {
+pub enum TrueOrFeatureSet {
+    #[serde(deserialize_with = "deserialize_true")]
+    True,
+    FeatureSet(FeatureSet),
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
+#[serde(untagged)]
+pub enum FeatureSet {
     One(String),
-    More(Vec<String>),
+    Many(Vec<FeatureSet>),
 }
 
-impl RequiredFeature {
-    pub fn as_slice(&self) -> &[String] {
-        match self {
-            Self::One(x) => std::slice::from_ref(x),
-            Self::More(x) => x,
-        }
-    }
-}
-
-/// Used when deserializing [`PackageConfigFeatures::incompatible`] to ensure that at least 2
-/// features are in each feature set.
-fn deserialize_incompatible_features<'de, D>(deserializer: D) -> Result<Vec<Vec<String>>, D::Error>
+fn deserialize_true<'de, D>(d: D) -> Result<(), D::Error>
 where
     D: Deserializer<'de>,
 {
-    let result = <Vec<Vec<String>>>::deserialize(deserializer)?;
+    match bool::deserialize(d) {
+        // Is true, we're good to go!
+        Ok(true) => Ok(()),
+        // Is false, let's pretend it's invalid.
+        Ok(false) => Err(D::Error::invalid_type(
+            serde::de::Unexpected::Bool(false),
+            &"the boolean `true`, a string, or an array of strings (feature set)",
+        )),
+        // Is not a boolean, return the error.
+        Err(e) => Err(e),
+    }
+}
 
-    // Check that there are at least 2 features in an incompatible set.
-    for feature_set in result.iter() {
-        if feature_set.len() < 2 {
-            return Err(D::Error::invalid_length(feature_set.len(), &"2 or greater"));
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn rule() {
+        let always_nothing: Rule = serde_json::from_value(json!({ "when": true })).unwrap();
+        assert_eq!(
+            always_nothing,
+            Rule {
+                when: TrueOrFeatureSet::True,
+                require: None,
+                forbid: None,
+            },
+        );
     }
 
-    Ok(result)
+    #[test]
+    fn true_or_feature_set() {
+        let true_: TrueOrFeatureSet = serde_json::from_value(json!(true)).unwrap();
+        assert_eq!(true_, TrueOrFeatureSet::True);
+
+        let false_: Result<TrueOrFeatureSet, _> = serde_json::from_value(json!(false));
+        assert!(false_.is_err());
+
+        let feature_set_one: TrueOrFeatureSet = serde_json::from_value(json!("foo")).unwrap();
+        assert_eq!(
+            feature_set_one,
+            TrueOrFeatureSet::FeatureSet(FeatureSet::One("foo".to_string())),
+        );
+
+        let feature_set_many: TrueOrFeatureSet =
+            serde_json::from_value(json!(["foo", "bar"])).unwrap();
+        assert_eq!(
+            feature_set_many,
+            TrueOrFeatureSet::FeatureSet(FeatureSet::Many(vec![
+                FeatureSet::One("foo".to_string()),
+                FeatureSet::One("bar".to_string()),
+            ])),
+        );
+    }
+
+    #[test]
+    fn feature_set() {
+        let one: FeatureSet = serde_json::from_value(json!("foo")).unwrap();
+        assert_eq!(one, FeatureSet::One("foo".to_string()));
+
+        let many: FeatureSet = serde_json::from_value(json!(["foo", "OR", "bar"])).unwrap();
+        assert_eq!(
+            many,
+            FeatureSet::Many(vec![
+                FeatureSet::One("foo".to_string()),
+                FeatureSet::One("OR".to_string()),
+                FeatureSet::One("bar".to_string()),
+            ]),
+        );
+
+        let many_nested: FeatureSet =
+            serde_json::from_value(json!([["foo", "OR", ["bar"]], "baz"])).unwrap();
+        assert_eq!(
+            many_nested,
+            FeatureSet::Many(vec![
+                FeatureSet::Many(vec![
+                    FeatureSet::One("foo".to_string()),
+                    FeatureSet::One("OR".to_string()),
+                    FeatureSet::Many(vec![FeatureSet::One("bar".to_string())]),
+                ]),
+                FeatureSet::One("baz".to_string()),
+            ]),
+        );
+    }
 }
