@@ -14,12 +14,24 @@ pub struct FeatureKey(u64);
 ///
 /// This is internally a primitive hash map built on binary search. It ignores hash collisions, and
 /// should generally not be used for any other purpose.
+#[derive(Debug)]
 pub struct FeatureStorage {
     inner: Vec<(u64, String)>,
     build_hasher: RandomState,
 }
 
 impl FeatureStorage {
+    /// Shortcut function to create a new [`FeatureStorage`].
+    ///
+    /// As this is not used by the main application, it is only available during testing.
+    #[cfg(test)]
+    pub fn new() -> Self {
+        FeatureStorage {
+            inner: Vec::new(),
+            build_hasher: RandomState::new(),
+        }
+    }
+
     /// Creates a new [`FeatureStorage`] with a pre-allocated capacity.
     ///
     /// See [`Vec::with_capacity()`] for a greater explanation on what this does.
@@ -112,18 +124,6 @@ pub fn intern_features(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    impl FeatureStorage {
-        /// Shortcut function to create a new [`FeatureStorage`].
-        ///
-        /// As this is not used by the main application, it is only available during testing.
-        fn new() -> Self {
-            FeatureStorage {
-                inner: Vec::new(),
-                build_hasher: RandomState::new(),
-            }
-        }
-    }
 
     #[test]
     fn equal_features_are_equal_keys() {
