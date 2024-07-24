@@ -86,7 +86,7 @@ impl FeatureExpr {
             FeatureSet::One(feature) => {
                 // Standalone "OR" operator is not allowed.
                 assert_ne!(feature, Self::OR, "Feature set cannot begin with \"OR\"");
-                Self::Contains(storage.insert(feature))
+                Self::Contains(storage.create_key(&feature))
             }
             FeatureSet::Many(sets) => {
                 // Empty sets always pass. (Note that `Rule::from_schema()` special cases the
@@ -107,7 +107,7 @@ impl FeatureExpr {
                         FeatureSet::One(feature) => {
                             acc = Self::And(
                                 Box::new(acc),
-                                Box::new(Self::Contains(storage.insert(feature))),
+                                Box::new(Self::Contains(storage.create_key(&feature))),
                             )
                         }
                         FeatureSet::Many(sets) => {
