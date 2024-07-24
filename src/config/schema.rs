@@ -1,7 +1,7 @@
 use serde::{de::Error, Deserialize, Deserializer};
 
 /// Represents the configuration for a specific crate.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Default, Debug)]
 pub struct Config {
     pub max_combo_size: Option<usize>,
 
