@@ -1,8 +1,9 @@
-use crate::config::schema;
+use super::storage::WorkspaceConfig;
+use crate::config::{schema, storage::CrateConfig};
 use anyhow::{ensure, Context};
 use std::{collections::HashMap, fs, path::Path};
 
-pub fn load_config(folder: &Path) -> anyhow::Result<()> {
+pub fn load_config(folder: &Path) -> anyhow::Result<WorkspaceConfig> {
     let mut global = schema::Config::default();
     let mut crates = HashMap::new();
 
@@ -39,8 +40,8 @@ pub fn load_config(folder: &Path) -> anyhow::Result<()> {
             continue;
         }
 
-        crates.insert(name, config);
+        crates.insert(name, CrateConfig::from(config));
     }
 
-    Ok(todo!())
+    Ok(WorkspaceConfig::new(crates, global))
 }

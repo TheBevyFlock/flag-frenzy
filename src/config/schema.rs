@@ -4,9 +4,7 @@ use serde::{de::Error, Deserialize, Deserializer};
 #[derive(Deserialize, Default, Debug)]
 pub struct Config {
     pub max_combo_size: Option<usize>,
-
-    #[serde(default)]
-    pub skip_optional_deps: bool,
+    pub skip_optional_deps: Option<bool>,
 
     #[serde(default, rename = "rule")]
     pub rules: Vec<Rule>,
