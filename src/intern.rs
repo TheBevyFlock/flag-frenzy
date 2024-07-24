@@ -1,4 +1,4 @@
-use crate::config::PackageConfig;
+use crate::config::Config;
 use std::{
     collections::HashMap,
     hash::{BuildHasher, RandomState},
@@ -94,7 +94,7 @@ impl FeatureStorage {
 /// dependencies if enabled.
 pub fn intern_features(
     features: HashMap<String, Vec<String>>,
-    PackageConfig { features: config }: &PackageConfig,
+    config: Config<'_>,
 ) -> FeatureStorage {
     /// Returns true if a feature is likely an optional dependency.
     ///
@@ -108,10 +108,8 @@ pub fn intern_features(
     let mut storage = FeatureStorage::with_capacity(features.len());
 
     for (feature, deps) in features {
-        // If the feature should be skipped, or is an optional dependency, don't add it to storage.
-        if config.skip.contains(&feature)
-            || (config.skip_optional_deps && is_optional_dep(&feature, &deps))
-        {
+        // If the feature is an optional dependency and should be skipped, don't add it to storage.
+        if config.skip_optional_deps() && is_optional_dep(&feature, &deps) {
             continue;
         }
 

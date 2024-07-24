@@ -1,6 +1,7 @@
 use super::schema;
 use std::collections::HashMap;
 
+#[derive(Default, Debug)]
 pub struct WorkspaceConfig {
     crates: HashMap<String, CrateConfig>,
 
@@ -31,6 +32,7 @@ impl WorkspaceConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct CrateConfig {
     max_combo_size: Option<usize>,
     skip_optional_deps: Option<bool>,
@@ -53,6 +55,7 @@ impl From<schema::Config> for CrateConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct Config<'a> {
     workspace: &'a WorkspaceConfig,
     crate_: Option<&'a CrateConfig>,
