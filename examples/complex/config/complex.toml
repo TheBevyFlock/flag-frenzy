@@ -1,7 +1,11 @@
-[features]
-required = [
+[[rule]]
+when = true
+require = [
     "always-required",
-    ["choose-required-1", "choose-required-2"],
+    ["choose-required-1", "OR", "choose-required-2"],
 ]
-incompatible = [["incompatible-1", "incompatible-2"]]
-skip = ["always-fails"]
+forbid = "always-fails"
+
+[[rule]]
+when = ["incompatible-1", "incompatible-2"]
+forbid = true

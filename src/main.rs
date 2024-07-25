@@ -12,7 +12,7 @@ use anyhow::{bail, Context};
 use chunk::select_chunk;
 use cli::CLI;
 use combos::{estimate_combos, feature_combos};
-use config::{load_config, Config};
+use config::{load_config, WorkspaceConfig};
 use intern::intern_features;
 use metadata::{load_metadata, Metadata, Package};
 use runner::check_with_features;
@@ -24,7 +24,7 @@ fn main() -> anyhow::Result<()> {
         Some(ref path) => {
             load_config(path).with_context(|| format!("Failed to load config from {path:?}."))?
         }
-        None => Config::default(),
+        None => WorkspaceConfig::default(),
     };
 
     let Color {
@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
         let storage = intern_features(features, package_config);
 
         // The number of features or the max combo size, whichever is smaller.
-        let max_k = package_config.features.max_combo_size;
+        let max_k = package_config.max_combo_size();
 
         let estimated_checks = estimate_combos(storage.len() as u128, max_k.map(|k| k as u128))
             .context("Consider decreasing the max combo size in the config.")
@@ -62,12 +62,7 @@ fn main() -> anyhow::Result<()> {
         );
         println!("{bold}Estimated checks: {info}{}{reset}", estimated_checks);
 
-        for combo in feature_combos(
-            &storage,
-            max_k,
-            &package_config.features.required,
-            &package_config.features.incompatible,
-        ) {
+        for combo in feature_combos(&storage, package_config) {
             let mut features = Vec::with_capacity(combo.len());
 
             for &key in combo.iter() {
@@ -115,7 +110,7 @@ fn main() -> anyhow::Result<()> {
 fn process_packages(
     metadata: Metadata,
     cli: &CLI,
-    config: &Config,
+    config: &WorkspaceConfig,
 ) -> anyhow::Result<Vec<Package>> {
     let mut packages = metadata.packages;
 

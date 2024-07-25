@@ -1,4 +1,4 @@
-use crate::config::PackageConfig;
+use crate::config::Config;
 use std::{
     collections::HashMap,
     hash::{BuildHasher, RandomState},
@@ -14,12 +14,24 @@ pub struct FeatureKey(u64);
 ///
 /// This is internally a primitive hash map built on binary search. It ignores hash collisions, and
 /// should generally not be used for any other purpose.
+#[derive(Debug)]
 pub struct FeatureStorage {
     inner: Vec<(u64, String)>,
     build_hasher: RandomState,
 }
 
 impl FeatureStorage {
+    /// Shortcut function to create a new [`FeatureStorage`].
+    ///
+    /// As this is not used by the main application, it is only available during testing.
+    #[cfg(test)]
+    pub fn new() -> Self {
+        FeatureStorage {
+            inner: Vec::new(),
+            build_hasher: RandomState::new(),
+        }
+    }
+
     /// Creates a new [`FeatureStorage`] with a pre-allocated capacity.
     ///
     /// See [`Vec::with_capacity()`] for a greater explanation on what this does.
@@ -82,7 +94,7 @@ impl FeatureStorage {
 /// dependencies if enabled.
 pub fn intern_features(
     features: HashMap<String, Vec<String>>,
-    PackageConfig { features: config }: &PackageConfig,
+    config: Config<'_>,
 ) -> FeatureStorage {
     /// Returns true if a feature is likely an optional dependency.
     ///
@@ -96,10 +108,8 @@ pub fn intern_features(
     let mut storage = FeatureStorage::with_capacity(features.len());
 
     for (feature, deps) in features {
-        // If the feature should be skipped, or is an optional dependency, don't add it to storage.
-        if config.skip.contains(&feature)
-            || (config.skip_optional_deps && is_optional_dep(&feature, &deps))
-        {
+        // If the feature is an optional dependency and should be skipped, don't add it to storage.
+        if config.skip_optional_deps() && is_optional_dep(&feature, &deps) {
             continue;
         }
 
@@ -112,18 +122,6 @@ pub fn intern_features(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    impl FeatureStorage {
-        /// Shortcut function to create a new [`FeatureStorage`].
-        ///
-        /// As this is not used by the main application, it is only available during testing.
-        fn new() -> Self {
-            FeatureStorage {
-                inner: Vec::new(),
-                build_hasher: RandomState::new(),
-            }
-        }
-    }
 
     #[test]
     fn equal_features_are_equal_keys() {
