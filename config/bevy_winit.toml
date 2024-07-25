@@ -1,0 +1,3 @@
+[[rule]]
+when = true
+require = ["x11", "OR", "wayland"]
