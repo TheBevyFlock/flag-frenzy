@@ -3,6 +3,11 @@ use crate::config::{schema, storage::CrateConfig};
 use anyhow::{ensure, Context};
 use std::{collections::HashMap, fs, path::Path};
 
+/// Loads all crate configuration within a given folder.
+/// 
+/// This will only load files (not symlinks) with a `.toml` extension, all other will be skipped.
+/// The file `global.toml` is special-cased: it cannot contain any rules, but it will provide the
+/// new defaults for all other crate configuration.
 pub fn load_config(folder: &Path) -> anyhow::Result<WorkspaceConfig> {
     let mut global = schema::Config::default();
     let mut crates = HashMap::new();

@@ -90,8 +90,7 @@ impl FeatureStorage {
 
 /// Interns all features within the given [`Vec<String>`].
 ///
-/// This skips features specified in passed [`PackageConfig`], and additionally optional
-/// dependencies if enabled.
+/// This skips optional dependencies, if enabled in the passed [`Config`].
 pub fn intern_features(
     features: HashMap<String, Vec<String>>,
     config: Config<'_>,
