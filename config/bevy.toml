@@ -1,5 +1,5 @@
 max_combo_size = 2
 
 [[rule]]
-when = "bevy_winit"
+when = ["bevy_winit", "OR", "accesskit_unix"]
 require = ["x11", "OR", "wayland"]
