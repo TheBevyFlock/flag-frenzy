@@ -65,14 +65,14 @@ impl<'a> Config<'a> {
     /// Defaults to [`None`].
     pub fn max_combo_size(&self) -> Option<usize> {
         self.crate_
-            .map_or(None, |c| c.max_combo_size)
+            .and_then(|c| c.max_combo_size)
             .or(self.workspace.max_combo_size)
     }
 
     /// Defaults to false.
     pub fn skip_optional_deps(&self) -> bool {
         self.crate_
-            .map_or(None, |c| c.skip_optional_deps)
+            .and_then(|c| c.skip_optional_deps)
             .or(self.workspace.skip_optional_deps)
             .unwrap_or_default()
     }
