@@ -1,0 +1,3 @@
+[[rule]]
+when = ["file_watcher", "OR", "embedded_watcher"]
+require = "multi_threaded"
