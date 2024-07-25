@@ -12,7 +12,7 @@ use anyhow::{bail, Context};
 use chunk::select_chunk;
 use cli::CLI;
 use combos::{estimate_combos, feature_combos};
-use config::{load_config, Config};
+use config::{load_config, WorkspaceConfig};
 use intern::intern_features;
 use metadata::{load_metadata, Metadata, Package};
 use runner::check_with_features;
@@ -24,7 +24,7 @@ fn main() -> anyhow::Result<()> {
         Some(ref path) => {
             load_config(path).with_context(|| format!("Failed to load config from {path:?}."))?
         }
-        None => Config::default(),
+        None => WorkspaceConfig::default(),
     };
 
     let Color {
@@ -115,7 +115,7 @@ fn main() -> anyhow::Result<()> {
 fn process_packages(
     metadata: Metadata,
     cli: &CLI,
-    config: &Config,
+    config: &WorkspaceConfig,
 ) -> anyhow::Result<Vec<Package>> {
     let mut packages = metadata.packages;
 

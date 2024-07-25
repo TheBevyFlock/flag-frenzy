@@ -1,10 +1,10 @@
-use crate::{combos::estimate_combos, config::Config, metadata::Package};
+use crate::{combos::estimate_combos, config::WorkspaceConfig, metadata::Package};
 
 pub fn select_chunk(
     total_chunks: usize,
     chunk: usize,
     packages: Vec<Package>,
-    config: &Config,
+    config: &WorkspaceConfig,
 ) -> Vec<Package> {
     assert!(chunk < total_chunks);
 
@@ -20,15 +20,14 @@ pub fn select_chunk(
 ///
 /// The returned [`Vec`] contains a tuples of the packages and their corresponding combinations. It
 /// is sorted so that the package with the greatest amount of combinations will be last.
-fn sort_by_combos(packages: Vec<Package>, config: &Config) -> Vec<(Package, u128)> {
+fn sort_by_combos(packages: Vec<Package>, config: &WorkspaceConfig) -> Vec<(Package, u128)> {
     let mut sorted = Vec::with_capacity(packages.len());
 
     // Calculate the amount of combos for each package, then add it to the list.
     for package in packages {
         let max_k = config
             .get(&package.name)
-            .features
-            .max_combo_size
+            .max_combo_size()
             .map(|k| k as u128);
 
         let combos = estimate_combos(package.features.len() as u128, max_k).unwrap();
