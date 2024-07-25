@@ -14,7 +14,7 @@ impl Rule {
     ///
     /// This needs a reference to a [`FeatureStorage`] so that it can convert features into
     /// [`FeatureKey`]s.
-    pub fn from_schema(schema: schema::Rule, storage: &mut FeatureStorage) -> Self {
+    pub fn from_schema(schema: schema::Rule, storage: &FeatureStorage) -> Self {
         let when = match schema.when {
             // If true, always run.
             TrueOrFeatureSet::True => FeatureExpr::Always,
@@ -81,7 +81,7 @@ impl FeatureExpr {
     const OR: &'static str = "OR";
 
     /// Parses a [`FeatureSet`] into a [`FeatureExpr`].
-    fn parse(schema: FeatureSet, storage: &mut FeatureStorage) -> Self {
+    fn parse(schema: FeatureSet, storage: &FeatureStorage) -> Self {
         match schema {
             FeatureSet::One(feature) => {
                 // Standalone "OR" operator is not allowed.

@@ -5,7 +5,7 @@ use crate::{
 };
 
 pub fn feature_combos<'a>(
-    storage: &'a mut FeatureStorage,
+    storage: &'a FeatureStorage,
     config: Config<'_>,
 ) -> impl Iterator<Item = Box<[FeatureKey]>> + 'a {
     let total_features = storage.len();

@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
         let storage = intern_features(features, package_config);
 
         // The number of features or the max combo size, whichever is smaller.
-        let max_k = package_config.features.max_combo_size;
+        let max_k = package_config.max_combo_size();
 
         let estimated_checks = estimate_combos(storage.len() as u128, max_k.map(|k| k as u128))
             .context("Consider decreasing the max combo size in the config.")
@@ -62,12 +62,7 @@ fn main() -> anyhow::Result<()> {
         );
         println!("{bold}Estimated checks: {info}{}{reset}", estimated_checks);
 
-        for combo in feature_combos(
-            &storage,
-            max_k,
-            &package_config.features.required,
-            &package_config.features.incompatible,
-        ) {
+        for combo in feature_combos(&storage, package_config) {
             let mut features = Vec::with_capacity(combo.len());
 
             for &key in combo.iter() {

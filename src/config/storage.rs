@@ -55,7 +55,7 @@ impl From<schema::Config> for CrateConfig {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Config<'a> {
     workspace: &'a WorkspaceConfig,
     crate_: Option<&'a CrateConfig>,
