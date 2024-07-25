@@ -10,14 +10,14 @@ pub struct Config {
     pub rules: Vec<Rule>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Clone, PartialEq, Debug)]
 pub struct Rule {
     pub when: TrueOrFeatureSet,
     pub require: Option<FeatureSet>,
     pub forbid: Option<TrueOrFeatureSet>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Clone, PartialEq, Debug)]
 #[serde(untagged)]
 pub enum TrueOrFeatureSet {
     #[serde(deserialize_with = "deserialize_true")]
@@ -25,7 +25,7 @@ pub enum TrueOrFeatureSet {
     FeatureSet(FeatureSet),
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Clone, PartialEq, Debug)]
 #[serde(untagged)]
 pub enum FeatureSet {
     One(String),
