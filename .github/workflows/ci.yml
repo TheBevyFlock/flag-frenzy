@@ -34,7 +34,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache build files
-        uses: Leafwing-Studios/cargo-cache@v1
+        uses: Leafwing-Studios/cargo-cache@v2
         with:
           # Each chunk saves to a separate cache.
           cache-group: ${{ github.job }}-${{ matrix.chunk }}
