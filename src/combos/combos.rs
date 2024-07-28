@@ -144,7 +144,7 @@ mod tests {
 
         assert_eq!(combos.len() as u128, ncr(7, 2).unwrap());
 
-        for combo in combos.into_iter() {
+        for combo in combos {
             assert_eq!(combo.len(), 2);
         }
     }
