@@ -10,15 +10,15 @@ use std::{
 #[allow(clippy::upper_case_acronyms)]
 #[derive(FromArgs, Debug)]
 pub struct CLI {
-    /// the path to `Cargo.toml`
+    /// the path to `Cargo.toml`, by default it is discovered through `cargo locate-project`
     #[argh(option, default = "locate_manifest_or_exit()")]
     pub manifest_path: PathBuf,
 
-    /// the path to the config folder
+    /// the path to the config folder, defaults to `./config`
     #[argh(option)]
     pub config: Option<PathBuf>,
 
-    /// check a specific package
+    /// check a specific package, if excluded it will check the workspace
     #[argh(option, short = 'p')]
     pub package: Option<String>,
 

@@ -16,15 +16,22 @@ use config::{load_config, WorkspaceConfig};
 use intern::intern_features;
 use metadata::{load_metadata, Metadata, Package};
 use runner::check_with_features;
+use std::path::Path;
 
 fn main() -> anyhow::Result<()> {
     let cli = CLI::from_env().context("Failed to verify CLI flags.")?;
 
-    let config = match cli.config {
-        Some(ref path) => {
-            load_config(path).with_context(|| format!("Failed to load config from {path:?}."))?
-        }
-        None => WorkspaceConfig::default(),
+    let config_path = match cli.config {
+        Some(ref path) => path,
+        None => Path::new("config"),
+    };
+
+    let config = if config_path.is_dir() {
+        load_config(config_path)
+            .with_context(|| format!("Failed to load config from {config_path:?}."))?
+    } else {
+        eprintln!("No config folder found, using default config.");
+        WorkspaceConfig::default()
     };
 
     let Color {
