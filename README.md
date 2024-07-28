@@ -25,23 +25,9 @@ The `flag-frenzy` you know of today was written from scratch with the previous s
     - Note that this is on a best-effort basis: individual crates cannot be subdivided, and it does not account for rules and other filters. See [#14](https://github.com/TheBevyFlock/flag-frenzy/issues/14) for more information.
 - Colorful output and failure reports that help diagnose exactly which combinations raise errors.
 
-## Install
-
-`flag-frenzy` is primarily geared to testing Bevy using Github Actions. Because of this, it does not have version numbers or changelogs, and it is not published on <https://crates.io>. You must install it from the repository:
-
-```bash
-cargo install --git https://github.com/TheBevyFlock/flag-frenzy.git
-```
-
-To ensure that it installed, try running it:
-
-```bash
-flag-frenzy --help
-```
-
 ## Usage
 
-TODO :)
+Please see [the documentation](docs/README.md)!
 
 ## Trophies :trophy:
 
