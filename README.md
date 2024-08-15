@@ -35,3 +35,4 @@ Please see [the documentation](docs/README.md)!
 - [#14430](https://github.com/bevyengine/bevy/pull/14430) `bevy_ui` failing without `bevy_text`.
 - [#14469](https://github.com/bevyengine/bevy/pull/14469) `bevy_winit` failing without `serialize` feature.
 - [#14486](https://github.com/bevyengine/bevy/pull/14486) `bevy_gltf` failing with `pbr_multi_layer_material_textures` or `pbr_anisotropy_texture`.
+- [#14736](https://github.com/bevyengine/bevy/issues/14736) `bevy_dev_tools` failing without `bevy_gizmos` enabling its `bevy_render` feature.
