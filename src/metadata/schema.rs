@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub struct Metadata {
     /// Contains a list of packages in this workspace.
     ///
-    /// If [`load_metadata()`](super::load_metadata) is used, this will not contain any
+    /// If [`load_metadata()`](super::load_metadata) is used, this will not contain any external
     /// dependencies.
     pub packages: Vec<Package>,
 }
