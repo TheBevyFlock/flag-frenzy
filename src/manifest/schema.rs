@@ -1,12 +1,12 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 
-/// A subset of the metadata returned by `cargo-metadata` that's required for this application.
+/// A subset of the metadata returned by `cargo-metadata` that's required for `flag-frenzy`.
 #[derive(Deserialize, Debug)]
-pub struct Metadata {
+pub struct Manifest {
     /// Contains a list of packages in this workspace.
     ///
-    /// If [`load_metadata()`](super::load_metadata) is used, this will not contain any external
+    /// If [`load_manifest()`](super::load_manifest) is used, this will not contain any external
     /// dependencies.
     pub packages: Vec<Package>,
 }

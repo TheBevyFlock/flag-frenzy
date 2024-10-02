@@ -1,4 +1,4 @@
-use super::Metadata;
+use super::Manifest;
 use anyhow::{bail, ensure, Context};
 use std::{
     ffi::OsStr,
@@ -9,9 +9,9 @@ use std::{
 /// The format version of the output of `cargo-metadata`.
 const FORMAT_VERSION: &str = "1";
 
-/// Loads the [`Metadata`] of a `Cargo.toml` at the specified `manifest_path` using
+/// Loads the [`Manifest`] of a `Cargo.toml` at the specified `manifest_path` using
 /// `cargo-metadata`.
-/// 
+///
 /// This function will load metadata for all packages in the workspace, but it will skip
 /// dependencies.
 ///
@@ -20,8 +20,8 @@ const FORMAT_VERSION: &str = "1";
 /// - If `manifest_path` is not a file.
 /// - If a new process could not be spawned.
 /// - If `cargo-metadata` returned a non-zero exit code.
-/// - If the returned JSON could not be deserialized into [`Metadata`].
-pub fn load_metadata(manifest_path: &Path) -> anyhow::Result<Metadata> {
+/// - If the returned JSON could not be deserialized into [`Manifest`].
+pub fn load_manifest(manifest_path: &Path) -> anyhow::Result<Manifest> {
     ensure!(manifest_path.is_file(), "{manifest_path:?} is not a file.");
 
     let output = Command::new("cargo")
@@ -38,6 +38,6 @@ pub fn load_metadata(manifest_path: &Path) -> anyhow::Result<Metadata> {
         bail!("`cargo-metadata` exited with a non-zero exit code.")
     }
 
-    serde_json::from_slice::<Metadata>(&output.stdout)
+    serde_json::from_slice::<Manifest>(&output.stdout)
         .context("Failed to parse output of `cargo-metadata`.")
 }

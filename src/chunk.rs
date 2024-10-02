@@ -1,4 +1,4 @@
-use crate::{combos::estimate_combos, config::WorkspaceConfig, metadata::Package};
+use crate::{combos::estimate_combos, config::WorkspaceConfig, manifest::Package};
 
 pub fn select_chunk(
     total_chunks: usize,

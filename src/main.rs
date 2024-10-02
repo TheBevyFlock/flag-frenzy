@@ -4,7 +4,7 @@ mod cli;
 mod combos;
 mod config;
 mod intern;
-mod metadata;
+mod manifest;
 mod runner;
 
 use ansi::*;
@@ -14,7 +14,7 @@ use cli::CLI;
 use combos::{estimate_combos, feature_combos};
 use config::{load_config, WorkspaceConfig};
 use intern::intern_features;
-use metadata::{load_metadata, Metadata, Package};
+use manifest::{load_manifest, Manifest, Package};
 use runner::check_with_features;
 use std::path::Path;
 
@@ -43,10 +43,10 @@ fn main() -> anyhow::Result<()> {
         error,
     } = Color::from_color_choice(cli.color);
 
-    let metadata = load_metadata(&cli.manifest_path).context("Failed to load Cargo metadata.")?;
+    let manifest = load_manifest(&cli.manifest_path).context("Failed to load Cargo manifest.")?;
 
     let packages =
-        process_packages(metadata, &cli, &config).context("Failure while processing packages.")?;
+        process_packages(manifest, &cli, &config).context("Failure while processing packages.")?;
 
     let mut failures = Vec::new();
 
@@ -107,7 +107,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Processes the packages in a [`Metadata`] and returns them in a [`Vec`].
+/// Processes the packages in a [`Manifest`] and returns them in a [`Vec`].
 ///
 /// Specifically, this:
 ///
@@ -115,11 +115,11 @@ fn main() -> anyhow::Result<()> {
 /// - Sorts the packages by their name.
 /// - Filters packages into chunks if enabled.
 fn process_packages(
-    metadata: Metadata,
+    manifest: Manifest,
     cli: &CLI,
     config: &WorkspaceConfig,
 ) -> anyhow::Result<Vec<Package>> {
-    let mut packages = metadata.packages;
+    let mut packages = manifest.packages;
 
     // Handle `--package` specifier.
     if let Some(name) = &cli.package {
