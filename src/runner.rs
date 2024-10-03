@@ -17,7 +17,10 @@ pub fn check_with_features(
     let features =
         features
             .iter()
-            .map(|key| storage.get(*key).unwrap())
+            // Convert `FeatureKey`s to `&str`, skipping keys that don't exist.
+            .filter_map(|key| storage.get(*key))
+            // Concatenate all strings together, with a `,` separating them. This will result in an
+            // extra comma at the end, but Cargo still accepts this.
             .fold(String::new(), |mut acc, f| {
                 acc.push_str(f);
                 acc.push(',');
