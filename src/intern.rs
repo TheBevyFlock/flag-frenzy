@@ -1,3 +1,8 @@
+//! Feature key internment.
+//!
+//! All feature names are [interned](https://en.wikipedia.org/wiki/String_interning) in the
+//! [`FeatureStorage`] type, which maps [`String`]s to cheap, easily-cloneable [`FeatureKey`]s.
+
 use crate::config::Config;
 use std::{
     collections::HashMap,
@@ -5,18 +10,36 @@ use std::{
 };
 
 /// A cheap key to a feature in [`FeatureStorage`].
+///
+/// This type is just a single [`u64`], so it can be copied easily without loss in performance.
+///
+/// Note that keys are not equivalent across [`FeatureStorage`]s. Inserting the same [`String`]
+/// into two separate [`FeatureStorage`]s will likely result in two different [`FeatureKey`]s, and
+/// using the same [`FeatureKey`] to get the string from two separate [`FeatureStorage`]s will likely result
+/// in two different strings (if [`FeatureStorage::get()`] doesn't return [`None`], that is).
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct FeatureKey(u64);
 
-/// A container that interns [`String`]s for feature flags, and returns [`FeatureKey`] for easy
+/// A container that interns [`String`]s for feature flags, and returns [`FeatureKey`]s for easy
 /// access.
 ///
 /// This is internally a primitive hash map built on binary search. It ignores hash collisions, and
 /// should generally not be used for any other purpose.
 #[derive(Debug)]
 pub struct FeatureStorage {
+    /// A list of feature entries. The [`u64`] is the [`FeatureKey`], and the [`String`] is the
+    /// associated feature.
+    ///
+    /// This must be sorted based on the [`u64`], since lookups use binary search.
     inner: Vec<(u64, String)>,
+    /// The hashing state, used to calculate the hash (and thus the [`FeatureKey`]) of features.
+    ///
+    /// The hash of two identical values using the same [`RandomState`] will result in the same
+    /// hash, but using two separate [`RandomState`]s may result in different hashes.
+    ///
+    /// As a result, inserting a feature into two separate [`FeatureStorage`]s may not result in
+    /// the same [`FeatureKey`].
     build_hasher: RandomState,
 }
 
@@ -106,9 +129,12 @@ pub fn intern_features(
 
     let mut storage = FeatureStorage::with_capacity(features.len());
 
+    // We cache this output, since `skip_optional_deps()` is heavier than a simple lookup.
+    let skip_optional_deps = config.skip_optional_deps();
+
     for (feature, deps) in features {
         // If the feature is an optional dependency and should be skipped, don't add it to storage.
-        if config.skip_optional_deps() && is_optional_dep(&feature, &deps) {
+        if skip_optional_deps && is_optional_dep(&feature, &deps) {
             continue;
         }
 
