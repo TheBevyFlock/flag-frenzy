@@ -105,8 +105,17 @@ impl FeatureStorage {
     ) -> FeatureKey {
         let mut dependecies_keys = HashSet::new();
         if let Some(dependencies) = features_map.get(&feature) {
-            for dependency in dependencies {
-                if dependecies_keys.contains(&self.create_key(dependency)) {
+            for mut dependency in dependencies {
+                let held_ref = if dependency.starts_with("dep:") {
+                    Some(dependency.split_at(4).1.to_string())
+                } else {
+                    None
+                };
+                if let Some(owned_dependency) = held_ref.as_ref() {
+                    dependency = owned_dependency;
+                }
+                if dependency == &feature || dependecies_keys.contains(&self.create_key(dependency))
+                {
                     continue;
                 }
                 let key = self.insert(dependency.clone(), features_map);
@@ -302,5 +311,19 @@ mod tests {
         assert!(!storage.is_dependency(unrelated_key, bar_key));
         assert!(!storage.is_dependency(unrelated_key, foobar_key));
         assert!(!storage.is_dependency(unrelated_key, unrelated_key));
+    }
+
+    #[test]
+    fn handle_self_named_dependencies() {
+        let mut features_map = HashMap::new();
+        features_map.insert("foo".to_string(), vec!["dep:foo".to_string()]);
+
+        let mut storage = FeatureStorage::new();
+
+        let foo_key = storage.insert("foo".to_string(), &features_map);
+        let dep_foo_key = storage.create_key("dep:foo");
+
+        assert!(!storage.is_dependency(foo_key, foo_key));
+        assert!(!storage.is_dependency(foo_key, dep_foo_key));
     }
 }
