@@ -5,7 +5,7 @@
 
 use crate::config::Config;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     hash::{BuildHasher, RandomState},
 };
 
@@ -18,7 +18,7 @@ use std::{
 /// using the same [`FeatureKey`] to get the string from two separate [`FeatureStorage`]s will likely result
 /// in two different strings (if [`FeatureStorage::get()`] doesn't return [`None`], that is).
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct FeatureKey(u64);
 
 /// A container that interns [`String`]s for feature flags, and returns [`FeatureKey`]s for easy
@@ -32,7 +32,7 @@ pub struct FeatureStorage {
     /// associated feature.
     ///
     /// This must be sorted based on the [`u64`], since lookups use binary search.
-    inner: Vec<(u64, String)>,
+    inner: Vec<(u64, String, HashSet<FeatureKey>)>,
     /// The hashing state, used to calculate the hash (and thus the [`FeatureKey`]) of features.
     ///
     /// The hash of two identical values using the same [`RandomState`] will result in the same
@@ -70,21 +70,63 @@ impl FeatureStorage {
     /// This will return [`None`] if nothing is found.
     #[must_use]
     pub fn get(&self, key: FeatureKey) -> Option<&str> {
-        match self.inner.binary_search_by_key(&key.0, |(h, _)| *h) {
+        match self.inner.binary_search_by_key(&key.0, |(h, ..)| *h) {
             Ok(i) => Some(&self.inner[i].1),
             Err(_) => None,
         }
     }
 
+    /// Returns the set of all direct and indirect dependencies of the feature.
+    ///
+    /// This will return [`None`] if nothing is found.
+    #[must_use]
+    pub fn get_dependecies(&self, key: FeatureKey) -> Option<&HashSet<FeatureKey>> {
+        match self.inner.binary_search_by_key(&key.0, |(h, ..)| *h) {
+            Ok(i) => Some(&self.inner[i].2),
+            Err(_) => None,
+        }
+    }
+
+    /// Returns true if `dependency_key` represents a direct or indirect dependency of `key`.
+    ///
+    /// This will return `false` if nothing is found.
+    #[must_use]
+    pub fn is_dependency(&self, key: FeatureKey, dependency_key: FeatureKey) -> bool {
+        self.get_dependecies(key)
+            .map(|dependencies| dependencies.contains(&dependency_key))
+            .unwrap_or_default()
+    }
+
     /// Inserts a feature into storage, returning its key.
-    pub fn insert(&mut self, feature: String) -> FeatureKey {
+    pub fn insert(
+        &mut self,
+        feature: String,
+        features_map: &HashMap<String, Vec<String>>,
+    ) -> FeatureKey {
+        let mut dependecies_keys = HashSet::new();
+        if let Some(dependencies) = features_map.get(&feature) {
+            for dependency in dependencies {
+                if dependecies_keys.contains(&self.create_key(dependency)) {
+                    continue;
+                }
+                let key = self.insert(dependency.clone(), features_map);
+                dependecies_keys.insert(key);
+
+                if let Some(sub_dependencies) = self.get_dependecies(key) {
+                    dependecies_keys = dependecies_keys
+                        .union(sub_dependencies)
+                        .map(|val| *val)
+                        .collect();
+                }
+            }
+        }
         let hash = self.create_key(&feature).0;
 
-        match self.inner.binary_search_by_key(&hash, |(h, _)| *h) {
+        match self.inner.binary_search_by_key(&hash, |(h, ..)| *h) {
             // Feature already exists in storage, do nothing.
             Ok(i) => debug_assert_eq!(self.inner[i].1, feature, "Congrats, you found a hash collision! This is incredibly rare, and likely won't happen if you re-run the program because the initial state of the hasher is determined by the OS. Cool!"),
             // Feature does not exist, add it!
-            Err(i) => self.inner.insert(i, (hash, feature)),
+            Err(i) => self.inner.insert(i, (hash, feature, dependecies_keys)),
         }
 
         FeatureKey(hash)
@@ -98,7 +140,7 @@ impl FeatureStorage {
 
     /// Returns an iterator over all [`FeatureKey`]s in this map.
     pub fn keys(&self) -> impl Iterator<Item = FeatureKey> + '_ {
-        self.inner.iter().map(|(h, _)| FeatureKey(*h))
+        self.inner.iter().map(|(h, ..)| FeatureKey(*h))
     }
 
     /// Creates a key for a given string.
@@ -132,13 +174,13 @@ pub fn intern_features(
     // We cache this output, since `skip_optional_deps()` is heavier than a simple lookup.
     let skip_optional_deps = config.skip_optional_deps();
 
-    for (feature, deps) in features {
+    for (feature, deps) in features.iter() {
         // If the feature is an optional dependency and should be skipped, don't add it to storage.
-        if skip_optional_deps && is_optional_dep(&feature, &deps) {
+        if skip_optional_deps && is_optional_dep(feature, deps) {
             continue;
         }
 
-        storage.insert(feature);
+        storage.insert(feature.clone(), &features);
     }
 
     storage
@@ -166,7 +208,9 @@ mod tests {
     fn insert_and_get_feature() {
         let mut storage = FeatureStorage::new();
 
-        let keys: Vec<_> = (0..5).map(|i| storage.insert(i.to_string())).collect();
+        let keys: Vec<_> = (0..5)
+            .map(|i| storage.insert(i.to_string(), &HashMap::new()))
+            .collect();
 
         for i in 0..5 {
             assert_eq!(
@@ -182,7 +226,7 @@ mod tests {
         let mut storage = FeatureStorage::new();
 
         let mut inserted_keys: Vec<_> = (0..10)
-            .map(|i| storage.insert(i.to_string()))
+            .map(|i| storage.insert(i.to_string(), &HashMap::new()))
             .map(|FeatureKey(h)| h)
             .collect();
 
@@ -206,8 +250,8 @@ mod tests {
         );
 
         // Insert 2 unique features.
-        storage.insert("hello".to_string());
-        storage.insert("goodbye".to_string());
+        storage.insert("hello".to_string(), &HashMap::new());
+        storage.insert("goodbye".to_string(), &HashMap::new());
 
         assert_eq!(
             storage.len(),
@@ -216,12 +260,47 @@ mod tests {
         );
 
         // Insert a duplicate feature.
-        storage.insert("hello".to_string());
+        storage.insert("hello".to_string(), &HashMap::new());
 
         assert_eq!(
             storage.len(),
             2,
             "Feature was not de-duplicated by `FeatureStorage::insert()`."
         );
+    }
+
+    #[test]
+    fn map_sub_dependencies() {
+        let mut features_map = HashMap::new();
+        features_map.insert("foo".to_string(), Vec::new());
+        features_map.insert("bar".to_string(), vec!["foo".to_string()]);
+        features_map.insert("foobar".to_string(), vec!["bar".to_string()]);
+        features_map.insert("unrelated".to_string(), Vec::new());
+        let mut storage = FeatureStorage::new();
+
+        let foobar_key = storage.insert("foobar".to_string(), &features_map);
+        let foo_key = storage.insert("foo".to_string(), &features_map);
+        let bar_key = storage.insert("bar".to_string(), &features_map);
+        let unrelated_key = storage.insert("unrelated".to_string(), &features_map);
+
+        assert!(storage.is_dependency(foobar_key, foo_key));
+        assert!(storage.is_dependency(foobar_key, bar_key));
+        assert!(!storage.is_dependency(foobar_key, unrelated_key));
+        assert!(!storage.is_dependency(foobar_key, foobar_key));
+
+        assert!(!storage.is_dependency(foo_key, foo_key));
+        assert!(!storage.is_dependency(foo_key, bar_key));
+        assert!(!storage.is_dependency(foo_key, foobar_key));
+        assert!(!storage.is_dependency(foo_key, unrelated_key));
+
+        assert!(storage.is_dependency(bar_key, foo_key));
+        assert!(!storage.is_dependency(bar_key, foobar_key));
+        assert!(!storage.is_dependency(bar_key, bar_key));
+        assert!(!storage.is_dependency(bar_key, unrelated_key));
+
+        assert!(!storage.is_dependency(unrelated_key, foo_key));
+        assert!(!storage.is_dependency(unrelated_key, bar_key));
+        assert!(!storage.is_dependency(unrelated_key, foobar_key));
+        assert!(!storage.is_dependency(unrelated_key, unrelated_key));
     }
 }
