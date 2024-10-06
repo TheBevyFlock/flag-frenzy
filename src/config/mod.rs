@@ -1,6 +1,6 @@
 mod loader;
 mod rule;
-mod schema;
+pub mod schema;
 mod storage;
 
 pub use self::loader::load_config;
