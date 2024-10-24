@@ -69,7 +69,9 @@ fn main() -> anyhow::Result<()> {
         );
         println!("{bold}Estimated checks: {info}{}{reset}", estimated_checks);
 
+        let mut actual_checks = 0;
         for combo in feature_combos(&storage, package_config) {
+            actual_checks += 1;
             let mut features = Vec::with_capacity(combo.len());
 
             for &key in combo.iter() {
@@ -80,6 +82,9 @@ fn main() -> anyhow::Result<()> {
 
             println!("\t{dim}Checking:{reset} {info}{:?}{reset}", features);
 
+            if cli.dry_run {
+                continue;
+            }
             let status = check_with_features(&name, &cli.manifest_path, &combo, &storage)
                 .with_context(|| format!("Tried checking package {name}."))?;
 
@@ -90,6 +95,7 @@ fn main() -> anyhow::Result<()> {
                 });
             }
         }
+        println!("{bold}Actual checks: {info}{}{reset}", actual_checks);
     }
 
     if !failures.is_empty() {
