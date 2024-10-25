@@ -1,0 +1,15 @@
+[package]
+name = "dependencies"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+simple = { path = "../simple", optional = true }
+empty = { path = "../empty", optional = true }
+
+[features]
+contains-dependencies = ["dependency1", "dependency2"]
+dependency1 = ["dependency3"]
+dependency2 = ["empty"]
+dependency3 = []
+simple = ["dep:simple"]
