@@ -5,7 +5,7 @@
 
 use crate::config::Config;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap},
     hash::{BuildHasher, RandomState},
 };
 
@@ -18,7 +18,7 @@ use std::{
 /// using the same [`FeatureKey`] to get the string from two separate [`FeatureStorage`]s will likely result
 /// in two different strings (if [`FeatureStorage::get()`] doesn't return [`None`], that is).
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub struct FeatureKey(u64);
 
 /// A container that interns [`String`]s for feature flags, and returns [`FeatureKey`]s for easy
@@ -32,7 +32,7 @@ pub struct FeatureStorage {
     /// associated feature.
     ///
     /// This must be sorted based on the [`u64`], since lookups use binary search.
-    inner: Vec<(u64, String, HashSet<FeatureKey>)>,
+    inner: Vec<(u64, String, BTreeSet<FeatureKey>)>,
     /// The hashing state, used to calculate the hash (and thus the [`FeatureKey`]) of features.
     ///
     /// The hash of two identical values using the same [`RandomState`] will result in the same
@@ -80,7 +80,7 @@ impl FeatureStorage {
     ///
     /// This will return [`None`] if nothing is found.
     #[must_use]
-    pub fn get_dependencies(&self, key: FeatureKey) -> Option<&HashSet<FeatureKey>> {
+    pub fn get_dependencies(&self, key: FeatureKey) -> Option<&BTreeSet<FeatureKey>> {
         match self.inner.binary_search_by_key(&key.0, |(h, ..)| *h) {
             Ok(i) => Some(&self.inner[i].2),
             Err(_) => None,
@@ -103,7 +103,7 @@ impl FeatureStorage {
         feature: String,
         features_map: &HashMap<String, Vec<String>>,
     ) -> FeatureKey {
-        let mut dependencies_keys = HashSet::new();
+        let mut dependencies_keys = BTreeSet::new();
         if let Some(dependencies) = features_map.get(&feature) {
             for dependency in dependencies {
                 // we ignore - dependencies which aren't in the list of features,
