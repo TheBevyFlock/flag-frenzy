@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
                 });
             }
         }
-        println!("{bold}Actual checks: {info}{}{reset}", actual_checks);
+        println!("{bold}Actual checks: {info}{actual_checks}{reset}");
     }
 
     if !failures.is_empty() {
@@ -108,7 +108,11 @@ fn main() -> anyhow::Result<()> {
         bail!("Some packages failed to be checked.");
     }
 
-    println!("{success}{bold}Feature combination checks successful! Congrats :){reset}");
+    if cli.dry_run {
+        println!("Dry run completed, no checks were run.")
+    } else {
+        println!("{success}{bold}Feature combination checks successful! Congrats :){reset}");
+    }
 
     Ok(())
 }

@@ -34,7 +34,7 @@ pub struct CLI {
     #[argh(option, default = "ColorChoice::Always")]
     pub color: ColorChoice,
 
-    /// when set, only print the feature combos that will be checked instead of actually checking them
+    /// print feature combos without running checks for them
     #[argh(switch)]
     pub dry_run: bool,
 }
