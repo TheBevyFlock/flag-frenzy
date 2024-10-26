@@ -67,7 +67,7 @@ fn main() -> anyhow::Result<()> {
             "{bold}Package {info}{name}{reset}{bold} with {info}{}{reset}{bold} features.{reset}",
             storage.len()
         );
-        println!("{bold}Estimated checks: {info}{}{reset}", estimated_checks);
+        println!("{bold}Estimated checks: {info}{estimated_checks}{reset}");
 
         let mut actual_checks = 0;
         for combo in feature_combos(&storage, package_config) {
@@ -109,7 +109,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if cli.dry_run {
-        println!("Dry run completed, no checks were run.")
+        println!("{info}{bold}Dry run completed, no checks were run.{reset}");
     } else {
         println!("{success}{bold}Feature combination checks successful! Congrats :){reset}");
     }
