@@ -138,6 +138,8 @@ impl FeatureExpr {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use serde_json::json;
 
@@ -145,9 +147,9 @@ mod tests {
     fn rule_from_schema() {
         let mut storage = FeatureStorage::new();
 
-        let foo = storage.insert("foo".to_string());
-        let bar = storage.insert("bar".to_string());
-        let baz = storage.insert("baz".to_string());
+        let foo = storage.insert("foo".to_string(), &HashMap::new());
+        let bar = storage.insert("bar".to_string(), &HashMap::new());
+        let baz = storage.insert("baz".to_string(), &HashMap::new());
 
         let empty = Rule::from_schema(
             schema::Rule {
@@ -228,9 +230,9 @@ mod tests {
     fn rule_validate() {
         let mut storage = FeatureStorage::new();
 
-        let foo = storage.insert("foo".to_string());
-        let bar = storage.insert("bar".to_string());
-        let baz = storage.insert("baz".to_string());
+        let foo = storage.insert("foo".to_string(), &HashMap::new());
+        let bar = storage.insert("bar".to_string(), &HashMap::new());
+        let baz = storage.insert("baz".to_string(), &HashMap::new());
 
         let always_deny_foo = Rule {
             when: FeatureExpr::Always,
@@ -279,9 +281,9 @@ mod tests {
 
         let mut storage = FeatureStorage::new();
 
-        let foo = storage.insert("foo".to_string());
-        let bar = storage.insert("bar".to_string());
-        let baz = storage.insert("baz".to_string());
+        let foo = storage.insert("foo".to_string(), &HashMap::new());
+        let bar = storage.insert("bar".to_string(), &HashMap::new());
+        let baz = storage.insert("baz".to_string(), &HashMap::new());
 
         let empty = expr_from_json(json!([]), &mut storage);
 
@@ -383,9 +385,9 @@ mod tests {
     fn evaluate_expression() {
         let mut storage = FeatureStorage::new();
 
-        let foo = storage.insert("foo".to_string());
-        let bar = storage.insert("bar".to_string());
-        let baz = storage.insert("baz".to_string());
+        let foo = storage.insert("foo".to_string(), &HashMap::new());
+        let bar = storage.insert("bar".to_string(), &HashMap::new());
+        let baz = storage.insert("baz".to_string(), &HashMap::new());
 
         let always = FeatureExpr::Always;
 
