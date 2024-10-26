@@ -67,9 +67,11 @@ fn main() -> anyhow::Result<()> {
             "{bold}Package {info}{name}{reset}{bold} with {info}{}{reset}{bold} features.{reset}",
             storage.len()
         );
-        println!("{bold}Estimated checks: {info}{}{reset}", estimated_checks);
+        println!("{bold}Estimated checks: {info}{estimated_checks}{reset}");
 
+        let mut actual_checks = 0;
         for combo in feature_combos(&storage, package_config) {
+            actual_checks += 1;
             let mut features = Vec::with_capacity(combo.len());
 
             for &key in combo.iter() {
@@ -80,6 +82,9 @@ fn main() -> anyhow::Result<()> {
 
             println!("\t{dim}Checking:{reset} {info}{:?}{reset}", features);
 
+            if cli.dry_run {
+                continue;
+            }
             let status = check_with_features(&name, &cli.manifest_path, &combo, &storage)
                 .with_context(|| format!("Tried checking package {name}."))?;
 
@@ -90,6 +95,7 @@ fn main() -> anyhow::Result<()> {
                 });
             }
         }
+        println!("{bold}Actual checks: {info}{actual_checks}{reset}");
     }
 
     if !failures.is_empty() {
@@ -102,7 +108,11 @@ fn main() -> anyhow::Result<()> {
         bail!("Some packages failed to be checked.");
     }
 
-    println!("{success}{bold}Feature combination checks successful! Congrats :){reset}");
+    if cli.dry_run {
+        println!("{info}{bold}Dry run completed, no checks were run.{reset}");
+    } else {
+        println!("{success}{bold}Feature combination checks successful! Congrats :){reset}");
+    }
 
     Ok(())
 }

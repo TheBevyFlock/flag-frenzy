@@ -33,6 +33,10 @@ pub struct CLI {
     /// when to use color in the terminal output, either "always" or "never"
     #[argh(option, default = "ColorChoice::Always")]
     pub color: ColorChoice,
+
+    /// print feature combos without running checks for them
+    #[argh(switch)]
+    pub dry_run: bool,
 }
 
 impl CLI {
