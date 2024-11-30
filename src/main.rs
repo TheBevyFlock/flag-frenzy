@@ -17,6 +17,8 @@ use intern::intern_features;
 use manifest::{load_manifest, Manifest, Package};
 use runner::check_with_features;
 use std::path::Path;
+#[cfg(test)]
+mod tests;
 
 fn main() -> anyhow::Result<()> {
     let cli = CLI::from_env().context("Failed to verify CLI flags.")?;
@@ -124,7 +126,7 @@ fn main() -> anyhow::Result<()> {
 /// - Returns a single package if `--package` is specified in the CLI.
 /// - Sorts the packages by their name.
 /// - Filters packages into chunks if enabled.
-fn process_packages(
+pub(crate) fn process_packages(
     manifest: Manifest,
     cli: &CLI,
     config: &WorkspaceConfig,
