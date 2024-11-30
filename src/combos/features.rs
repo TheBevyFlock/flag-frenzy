@@ -67,6 +67,7 @@ mod tests {
         let schema_config = crate::config::schema::Config {
             max_combo_size: Some(3),
             skip_optional_deps: None,
+            skip_used_optional_deps: None,
             rules: vec![],
         };
         let workspace_config = WorkspaceConfig::new(HashMap::new(), schema_config);

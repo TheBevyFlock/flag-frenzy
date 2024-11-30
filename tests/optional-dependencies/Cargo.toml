@@ -1,0 +1,12 @@
+[package]
+name = "optional-dependencies"
+edition = "2021"
+
+[dependencies]
+used = { path = "../used", optional = true }
+implicit = { path = "../unused", optional = true }
+explicit = { path = "../explicit", optional = true }
+
+[features]
+foo = ["used"]
+explicit = ["dep:explicit"]

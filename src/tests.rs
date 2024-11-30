@@ -12,7 +12,7 @@ use crate::{
 fn test(manifest_path: &Path, expected_combos: Vec<Vec<&str>>, config_path: Option<&Path>) {
     let config = config_path
         .map(|path| load_config(path).unwrap())
-        .unwrap_or(WorkspaceConfig::default());
+        .unwrap_or_else(|| WorkspaceConfig::default());
     let path = PathBuf::from(manifest_path);
     let cli = CLI {
         manifest_path: path.clone(),
@@ -119,5 +119,45 @@ fn parse_dependencies() {
             vec!["simple"],
         ],
         None,
+    );
+}
+
+#[test]
+fn parse_optional_dependencies_without_filtering_used_dependencies() {
+    test(
+        Path::new("tests/optional-dependencies/Cargo.toml"),
+        vec![
+            vec![],
+            vec!["explicit"],
+            vec!["explicit", "foo"],
+            vec!["explicit", "foo", "implicit"],
+            vec!["explicit", "implicit"],
+            vec!["explicit", "implicit", "used"],
+            vec!["explicit", "used"],
+            vec!["foo"],
+            vec!["foo", "implicit"],
+            vec!["implicit"],
+            vec!["implicit", "used"],
+            vec!["used"],
+        ],
+        None,
+    );
+}
+
+#[test]
+fn parse_optional_dependencies_and_filter_used_dependencies() {
+    test(
+        Path::new("tests/optional-dependencies/Cargo.toml"),
+        vec![
+            vec![],
+            vec!["explicit"],
+            vec!["explicit", "foo"],
+            vec!["explicit", "foo", "implicit"],
+            vec!["explicit", "implicit"],
+            vec!["foo"],
+            vec!["foo", "implicit"],
+            vec!["implicit"],
+        ],
+        Some(Path::new("tests/optional-dependencies/config")),
     );
 }

@@ -44,3 +44,20 @@ serde = { version = "1", optional = true }
 ```
 
 For some crates, it may not be necessary to check combinations of optional dependencies. You can skip them entirely by setting `skip_optional_deps = true`.
+
+## `skip_used_optional_deps`
+
+Crates can specify optional dependencies and use them in features, or leave them as an implicit or explicit feature. 
+
+```toml
+[dependencies]
+used = { path = "../used", optional = true }
+implicit = { path = "../unused", optional = true }
+explicit = { path = "../explicit", optional = true }
+
+[features]
+foo = ["used"]
+explicit = ["dep:explicit"]
+```
+
+For some crates, it may not be necessary to check the usage of used features. You can skip them entirely by setting `skip_used_optional_deps = true`.

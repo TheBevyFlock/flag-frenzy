@@ -7,6 +7,7 @@ pub struct WorkspaceConfig {
 
     max_combo_size: Option<usize>,
     skip_optional_deps: Option<bool>,
+    skip_used_optional_deps: Option<bool>,
 }
 
 impl WorkspaceConfig {
@@ -14,6 +15,7 @@ impl WorkspaceConfig {
         let schema::Config {
             max_combo_size,
             skip_optional_deps,
+            skip_used_optional_deps,
             rules: _,
         } = global;
 
@@ -21,6 +23,7 @@ impl WorkspaceConfig {
             crates,
             max_combo_size,
             skip_optional_deps,
+            skip_used_optional_deps,
         }
     }
 
@@ -36,6 +39,7 @@ impl WorkspaceConfig {
 pub struct CrateConfig {
     max_combo_size: Option<usize>,
     skip_optional_deps: Option<bool>,
+    skip_used_optional_deps: Option<bool>,
     rules: Vec<schema::Rule>,
 }
 
@@ -44,12 +48,14 @@ impl From<schema::Config> for CrateConfig {
         let schema::Config {
             max_combo_size,
             skip_optional_deps,
+            skip_used_optional_deps,
             rules,
         } = value;
 
         Self {
             max_combo_size,
             skip_optional_deps,
+            skip_used_optional_deps,
             rules,
         }
     }
@@ -74,6 +80,14 @@ impl<'a> Config<'a> {
         self.crate_
             .and_then(|c| c.skip_optional_deps)
             .or(self.workspace.skip_optional_deps)
+            .unwrap_or_default()
+    }
+
+    /// Defaults to false.
+    pub fn skip_used_optional_deps(&self) -> bool {
+        self.crate_
+            .and_then(|c| c.skip_used_optional_deps)
+            .or(self.workspace.skip_used_optional_deps)
             .unwrap_or_default()
     }
 

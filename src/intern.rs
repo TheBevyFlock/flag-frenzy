@@ -5,7 +5,7 @@
 
 use crate::config::Config;
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeSet, HashMap, HashSet},
     hash::{BuildHasher, RandomState},
 };
 
@@ -179,11 +179,33 @@ pub fn intern_features(
 
     // We cache this output, since `skip_optional_deps()` is heavier than a simple lookup.
     let skip_optional_deps = config.skip_optional_deps();
+    let skip_used_optional_deps = config.skip_used_optional_deps();
+    let used_dependencies = if skip_used_optional_deps {
+        let mut combined_values = HashSet::new();
+        for values in features.values() {
+            combined_values.extend(values.iter().cloned());
+        }
+        Some(combined_values)
+    } else {
+        None
+    };
 
     // remove optional features from the feature map, so that they won't be added in recursive calls to `insert`
     let features: HashMap<_, _> = features
         .into_iter()
-        .filter(|(feature, deps)| !skip_optional_deps || !is_optional_dep(feature, deps))
+        .filter(|(feature, deps)| {
+            if skip_optional_deps {
+                return !is_optional_dep(feature, deps);
+            }
+            if skip_used_optional_deps {
+                return !is_optional_dep(feature, deps)
+                    || !used_dependencies
+                        .as_ref()
+                        .map(|used_dependencies| used_dependencies.contains(feature))
+                        .unwrap_or_default();
+            }
+            true
+        })
         .collect();
 
     for (feature, _) in features.iter() {
